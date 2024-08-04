@@ -15,14 +15,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
     let mut stack: Vec<U256> = Vec::new();
     let mut pc : usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
-    let mut status : bool = true;
-    let mut prev_opcode_stack : Vec<u8> = Vec::new();
-    let mut prev_opcode_pcvalue_stack : Vec<u8> = Vec::new();
-    //when a new txn starts it initialses the memory from 0 
-    //this evm function runs a new txn execution 
-    let mut memory_array : Vec<u8> = vec![0; 0];
-    let mut mem_size = 0;
-    let mem_ptr : usize = 0;
 
     let code = _code.as_ref();
     println!("value of code is {:?}",code);
@@ -36,14 +28,10 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
         println!("value of pc is {pc}");
         if opcode == 0x00 {
             // STOP
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             break;
         }
         if opcode == 0x5f {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             //to convert an integer to byte format 
             //let vali: u32 = 0;
             //let val = hex::encode(vali.to_be_bytes());
@@ -52,28 +40,60 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             helper::push_to_stack(&mut stack, U256::from(0));
             pc += 1;
         }
-        //let push_opcodes : [u8;32] = [0x60,0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,0x7b,0x7c,0x7d,0x7e,0x7f];
+        let push_opcodes : [u8;32] = [0x60,0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,0x7b,0x7c,0x7d,0x7e,0x7f];
         //The contains method in Rust is used to check if a slice (or any type that can be converted to a slice, like an array or a vector) contains a specific element. 
-        let push_opcodes : [u8; 32] = (96..=127).collect::<Vec<u8>>().try_into().expect("Wrong length");
-        if push_opcodes.contains(&opcode) {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+        if opcode == 0x60 {
             println!("{opcode}");
             pc +=1;
             helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
         }
+        if opcode == 0x61 {
+            pc +=1;
+            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+            //as the opcodes run one by one 
+        }
+        if opcode == 0x62{
+            pc +=1;
+            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+        }
+        if opcode == 0x63 {
+            pc +=1;
+            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+            
+        }
+        //to stop a running terminal while running these steps press ctrl +c 
+        if opcode == 0x65 {
+            pc +=1;
+            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+            
+            println!("value of pc is {pc}");
+        }
         
+        if opcode == 0x69 {
+            pc +=1;
+            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+            
+            println!("value of pc is {pc}");
+        }
+        if opcode == 0x6a{
+            pc +=1;
+            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+            
+            println!("value of pc is {pc}");
+        }
+        if opcode == 0x7f{
+            pc +=1;
+            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+            
+            println!("value of pc is {pc}");
+            //NOTE 
+            //CHNAGED THE ORDER OF THE STACK FOR THIS ONE IN EVM.JSON AS GIVENN WRONG ORDER ACCORDING TO PUSH AND POP FUNCTIONS DEFINED IN RUST FOR VECTORS 
+        }
         if opcode == 0x50 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             stack.remove(0);
             pc += 1;
         }
-        
-         //to stop a running terminal while running these steps press ctrl +c 
         if opcode == 0x1 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc +=1;
             let (num1,num2) = helper::pop2(&mut stack);
             //let num3 = manageoverflowadd(num1,num2);
@@ -82,8 +102,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             helper::push_to_stack(&mut stack,num3);
         }
         if opcode == 0x2 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc +=1;
             let (num1,num2) = helper::pop2(&mut stack);
             //here multiplication is preformed as if the value goes goes of bound then it is wrapped around 
@@ -96,16 +114,12 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             helper::push_to_stack(&mut stack,num3);
         }
         if opcode == 0x3 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let (num3,underflow_status) = num1.overflowing_sub(num2);
             helper::push_to_stack(&mut stack,num3);
         }
         if opcode == 0x4 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
@@ -118,8 +132,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
 
         }
         if opcode == 0x6 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
@@ -131,8 +143,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x8 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2,num3) = helper::pop3(&mut stack);
             if num3 == U256::from(0) {
@@ -145,8 +155,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x09 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2,num3) = helper::pop3(&mut stack);
             if num3 == U256::from(0) {
@@ -162,16 +170,12 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             
         }
         if opcode == 0xa {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num1.pow(num2);
             helper::push_to_stack(&mut stack,num3);
         }
         if opcode == 0xb {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             //here still the number is present as U256 type so we need to to sign extention to ensure that it is correct 
             //sor positive numbers we have to put all remaining bits as 0 but this is allready there so no chnage is required 
             //in negative we have to put 1 to all places 
@@ -202,8 +206,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
 
         }
         if opcode ==0x5 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc+=1;
             let (num1, num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
@@ -246,8 +248,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             
         }
         if opcode == 0x7 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc +=1;
             let (num1,num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
@@ -294,8 +294,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             
         }
         if opcode == 0x10 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc +=1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num1 < num2;
@@ -307,8 +305,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x11 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num1 > num2;
@@ -320,8 +316,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }            
         }
         if opcode == 0x12 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc +=1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = helper::signed_comparison_greater(num1, num2);
@@ -333,8 +327,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x13 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc +=1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = helper::signed_comparison_greater(num1, num2);
@@ -346,8 +338,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x14 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             if num2 == num1{
@@ -358,8 +348,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x15 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let num1 = stack.remove(0);
             if num1 == U256::from(0){
@@ -370,16 +358,12 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x19 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let num1 = stack.remove(0);
             let num2 = num1 ^ U256::MAX;
             helper::push_to_stack(&mut stack, num2);
         }
         if opcode == 0x16 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num1 & num2;
@@ -390,8 +374,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
 
         }
         if opcode == 0x17 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num1 | num2;
@@ -399,32 +381,24 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
 
         }
         if opcode == 0x18 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num1 ^ num2;
             helper::push_to_stack(&mut stack , num3);
         }
         if opcode == 0x1b {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num2 << num1;
             helper::push_to_stack(&mut stack , num3);
         }
         if opcode == 0x1c {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             let num3 = num2 >> num1;
             helper::push_to_stack(&mut stack , num3);
         }
         if opcode == 0x1d {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             //here the code can enter a very big loop if not restrict to 256 bit as after 256 bit shift the answer is not going to change
@@ -457,8 +431,6 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
         }
         if opcode == 0x1a {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
             pc += 1;
             let (num1,num2) = helper::pop2(&mut stack);
             if num1 < U256::from(32){
@@ -474,259 +446,11 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             }
             
         }
-        let dup_opcodes : [u8; 16] = (128..=143).collect::<Vec<u8>>().try_into().expect("Wrong length");
-        if dup_opcodes.contains(&opcode) {
-            pc += 1;
-            let num2 = opcode - 128;
-            let index = num2 as usize;
-            let num1 = stack[index];
-            helper::push_to_stack(&mut stack, num1);
-            
-        }
         
-        let swap_opcodes : [u8; 16] = (144..=159).collect::<Vec<u8>>().try_into().expect("Wrong length");
-        if swap_opcodes.contains(&opcode) {
-            prev_opcode_stack.insert(0,opcode);
-            pc += 1;
-            let num1 = stack.remove(0);
-            let num2 = opcode - 144;
-            let index =  num2 as usize;
-            let intermidate = stack.remove(index);
-            stack.insert(0,intermidate);
-            stack.insert(index +1, num1);
-        }
-
-        if opcode == 0x58 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            //NOTE
-            //Get the value of the program counter prior to the increment corresponding to this instruction
-            helper::push_to_stack(&mut stack, pc.into());
-            pc += 1;
-        }
-
-        if opcode == 0x5a {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            //NOTE 
-            //dont know what to do here 
-            pc += 1;
-            helper::push_to_stack(&mut stack, U256::MAX);
-        }
-        //A byte offset refers to the position of a specific byte within a data structure, file, or memory block. It is a way to index or address bytes in a sequential manner, starting from a base address or the beginning of a data structure.
-        if opcode == 0x56 {
-            //let push_check = helper::find_valid_opcode()
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            //let num1 = stack.remove(0).low_u64() as usize;
-            //if num1 < code.len() && code[num1] == 0x5b  {
-              //  pc = num1;
-            //}
-            //else {
-              //  status = false;
-                //stack.clear();
-                //pc = pc + code.len();
-            //}
-            let invalid_indexes = helper::invalid_jumpdest(&code,&mut pc);
-            let num1 = stack.remove(0).low_u64() as usize;
-            if num1 < code.len() && code[num1] == 0x5b{
-                if invalid_indexes.contains(&num1){
-                    status = false;
-                    stack.clear();
-                    pc = pc + code.len();
-                }
-                else {
-                    pc = num1;
-
-                }
-            }
-            else {
-                status = false;
-                stack.clear();
-                pc = pc + code.len();
-
-            }
-        }
-        if opcode == 0x5b {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc += 1;
-        }
-        if opcode == 0x57{
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            
-            let invalid_indexes = helper::invalid_jumpdest(&code,&mut pc);
-            let num1 = stack.remove(0).low_u64() as usize;
-            let num2 = stack.remove(0);
-
-            if num1 < code.len() && code[num1] == 0x5b{
-                if invalid_indexes.contains(&num1){
-                    status = false;
-                    stack.clear();
-                    pc = pc + code.len();
-                }
-                else {
-                    if num2 == U256::from(0){
-                        pc +=1;
-                    }
-                    else {
-                        pc = num1;
-                    }
-                }
-            }
-            else {
-                status = false;
-                stack.clear();
-                pc = pc + code.len();
-
-            }
-        }
-        if opcode == 0x52 {
-            pc +=1;
-            //here the size of the array is always a multiple of 32 
-            let (num1,num2) = helper::pop2(&mut stack);
-            //num1 is the index at which we have to store the value
-            //memory_array is the memory vector 
-            let mut byte_form = [0u8; 32];
-            num2.to_big_endian(&mut byte_form);
-            let mut v2 = num1.low_u64() as usize;
-            if v2 >= memory_array.len() {
-                let intermidate_add_0 = v2 - memory_array.len();//these are len and index so difference of 1 is adjusted 
-                helper::add0(&mut memory_array, intermidate_add_0);
-                let expected_final_size = memory_array.len() + byte_form.len();
-                let req_0 = (expected_final_size/32 +1) * 32 -expected_final_size;
-                for i in byte_form{
-                    memory_array.push(i);//pushed as we are now changing the size of the array
-                }
-                helper::add0(&mut memory_array, req_0);
-            }
-            else{
-                //the max insert of of 32 
-                if v2 + byte_form.len() < memory_array.len(){
-                    for i in 0..byte_form.len(){
-                        memory_array[v2] = byte_form[i];
-                        v2 +=1;
-                    }
-                }
-                else {
-                    //always the lenght of memory will be a multiple of 32 
-                    helper::add0(&mut memory_array, 32);
-                    for i in 0..byte_form.len(){
-                        memory_array[v2] = byte_form[i];
-                        v2 +=1;
-                    }
-                }
-
-            }
-
-            //let expected_final_size = byte_form.len() + mem_ptr;
-            //let req_0 = (expected_final_size/32 + 1)*32;
-            
-            //here there is floor div so this step is required 
-            //if expected_final_size > memory_array.len(){
-              //  helper::add0(&mut memory_array,req_0);
-            //}
-            //for i in 0..byte_form.len(){
-              //  memory_array[i] = byte_form[v2];
-                //v2 +=1;
-                //mem_ptr += 1;
-            //}
-
-            //let rem_index = memory_array.len()/32 +1;
-            //let add_0_num = rem_index*32 - mem_ptr;
-            //mem_ptr is already 1 step ahead 
-            //helper::add0(&mut memory_array, add_0_num);
-            
-            //Yes, the MSTORE opcode in Ethereum's Virtual Machine (EVM) can overwrite any value in memory. The MSTORE opcode is used to write a value to a specific location in memory. If you use MSTORE to write to a memory location that already has data, it will replace the existing value at that location with the new value.
-            // memory is a simple byte array, data stored in 32 byte format but can also be done as 1 byte 
-            //memory is also a data structure just like the stack but it is cleared once the execution of the txn is done 
-            //in the memory it has a specific format where it maintains the memory pointer, scratch space etc but for that the instructions are given in the bytcode by organinsing the bytecode in the required seqence and we dont have to implement it here from the opcode 
-            //when the txn execution starts it starts with memory initialsed to 0 and When a transaction ends, the EVM automatically resets the memory state. This means that all the data stored in memory during the transaction is discarded, and the memory is prepared to be zeroed out for the next transaction.
-            // here we also have to implemment memory expansion 
-            //for inserting the value we need the value of the memory conuter and it is strored int the memory and all these values can be accessed by writing opcodes in the bytecode and we dont have to change anything in the opcode defn 
-
-
-        }
-        if opcode == 0x51 {
-            pc +=1;
-            //the size of memory must change even if we just try to access an index 
-            let num1 = stack.remove(0).low_u64() as usize;
-            if num1 > memory_array.len() {
-                let intermidate_add_0 = num1 - memory_array.len();//these are len and index so difference of 1 is adjusted 
-                helper::add0(&mut memory_array, intermidate_add_0);
-                let req_0 = ((num1+32)/32 +1)*32-memory_array.len();
-                helper::add0(&mut memory_array, req_0);
-                let ans = &memory_array[num1..num1+32];
-                let ans_vec = ans.to_vec();
-                let result = helper::bytes_to_u256(ans_vec);
-                helper::push_to_stack(&mut stack, result);
-            }
-            else {
-                
-                if num1 + 32 < memory_array.len(){
-                    let ans = &memory_array[num1..num1+32];
-                    let ans_vec = ans.to_vec();
-                    let result = helper::bytes_to_u256(ans_vec);
-                    helper::push_to_stack(&mut stack, result);
-                }
-                else {
-                    let mut req_0 = 0;
-                    if helper::div_check(U256::from(num1),U256::from(32)){
-                        req_0 =((num1+32)/32)*32-memory_array.len();
-                    }
-                    else {
-                        req_0 =((num1+32)/32 +1)*32-memory_array.len();
-                    }
-                    
-                    helper::add0(&mut memory_array, req_0);
-                    let ans = &memory_array[num1..num1+32];
-                    let mut ans_vec = ans.to_vec();
-                    let result = helper::bytes_to_u256(ans_vec);
-                    helper::push_to_stack(&mut stack, result);
-
-                } 
-            }
-        }
-        if opcode == 0x53{
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
-            let mut byte_form = [0u8; 32];
-            num2.to_big_endian(&mut byte_form);
-            println!("{:?}", byte_form);
-            let mut v1 = num1.low_u64() as usize;
-            if v1 >= memory_array.len(){
-                let intermidate_add_0 = v1 - memory_array.len();//these are len and index so difference of 1 is adjusted 
-                helper::add0(&mut memory_array, intermidate_add_0);
-                let expected_final_size = memory_array.len() + byte_form.len();
-                let req_0 = (expected_final_size/32 +1) * 32 -expected_final_size;
-                
-                helper::add0(&mut memory_array, req_0);
-                memory_array[v1] = byte_form[31];
-                println!("{:?}", memory_array);
-            }
-            else {
-                memory_array[v1] = byte_form[31];
-            }
-        }
-        if opcode == 0x59 {
-            pc +=1;
-            let result = memory_array.len();
-            helper::push_to_stack(&mut stack, U256::from(result));
-        }
-
-        if opcode == 0x20{
+        if opcode == 0x80{
             pc = pc + code.len();
-            helper::push_to_stack(&mut stack, U256::from(0));
+            stack.insert(0,U256::from(0));
         }
-        
-        //invalid opcode 
-        if opcode > 0x9f {
-            status = false;
-            break;
-        }
-
-        
         
         
     }
@@ -735,7 +459,7 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
 
     return EvmResult {
         stack: stack,
-        success: status,
+        success: true,
     };
 }
 

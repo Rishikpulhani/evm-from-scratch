@@ -13,9 +13,12 @@
  * to Rust, implement EVM in another programming language first.
  */
 
+ // if we initialise a project in rust using cargo new projectname but then chnage the name of the project from outside without chnaging the name in the package section of cargo.toml then it will not cause  problem, here the cargo was initialsed using evm package name but then it was changed to rust 
+ //here evm is refering to ur package name only 
+ //when we create a new package here evm then the files lib.rs and main.rs are named actually after the package name, so to use some function of library crate we have to write this statement of use evm::evm, as evm is the package name so lib.rs name is also evm, the func name is also evm
 use evm::evm;
-use primitive_types::U256;
-use serde::Deserialize;
+use primitive_types::U256;//imported crate as dependency
+use serde::Deserialize;//imported crate as dependency 
 
 #[derive(Debug, Deserialize)]
 struct Evmtest {
@@ -53,6 +56,7 @@ fn main() {
 
         let result = evm(&code);
 
+
         let mut expected_stack: Vec<U256> = Vec::new();
         if let Some(ref stacks) = test.expect.stack {
             for value in stacks {
@@ -86,7 +90,7 @@ fn main() {
             println!("Actual stack: [");
             for v in result.stack {
                 println!("  {:#X},", v);
-            }
+            }//to print each element in hexadecimal format 
             println!("]\n");
 
             println!("\nHint: {}\n", test.hint);
