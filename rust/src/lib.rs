@@ -1,50 +1,53 @@
 use primitive_types::U256;
+use tiny_keccak::{Hasher, Keccak};
 mod helper;
 
 // info on U256 and its implementation
-//The U256 type is typically defined as a struct containing multiple smaller integer types (e.g., u64) to represent a 256-bit integer:pub struct U256([u64; 4]); 
-// we can also preform bitwise multiplications, there are functions in rust which help us do it 
+//The U256 type is typically defined as a struct containing multiple smaller integer types (e.g., u64) to represent a 256-bit integer:pub struct U256([u64; 4]);
+// we can also preform bitwise multiplications, there are functions in rust which help us do it
 pub struct EvmResult {
     pub stack: Vec<U256>,
     pub success: bool,
 }
 
 
-
-pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
+//pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &Vec<u8>, _tx_from : &Vec<u8>) -> EvmResult
+pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String, _block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String) -> EvmResult {
     let mut stack: Vec<U256> = Vec::new();
-    let mut pc : usize = 0;
+    let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
-    let mut status : bool = true;
-    let mut prev_opcode_stack : Vec<u8> = Vec::new();
-    let mut prev_opcode_pcvalue_stack : Vec<u8> = Vec::new();
-    //when a new txn starts it initialses the memory from 0 
-    //this evm function runs a new txn execution 
-    let mut memory_array : Vec<u8> = vec![0; 0];
+    let mut status: bool = true;
+    let mut prev_opcode_stack: Vec<u8> = Vec::new();
+    let mut prev_opcode_pcvalue_stack: Vec<u8> = Vec::new();
+    //when a new txn starts it initialses the memory from 0
+    //this evm function runs a new txn execution
+    let mut memory_array: Vec<u8> = vec![0; 0];
     let mut mem_size = 0;
-    let mem_ptr : usize = 0;
+    let mem_ptr: usize = 0;
 
     let code = _code.as_ref();
-    println!("value of code is {:?}",code);
+    println!("value of code is {:?}", code);
+    //let tx_to = _tx_to;
+    //let tx_from = _tx_from;
 
     while pc < code.len() {
-        let opcode = code[pc];//u8 type
+        let opcode = code[pc]; //u8 type
         helper::print_type_of(&opcode);
         let opc = opcode;
         println!("value of opcode is {opcode}");
-        
+
         println!("value of pc is {pc}");
         if opcode == 0x00 {
             // STOP
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
             break;
         }
         if opcode == 0x5f {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            //to convert an integer to byte format 
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            //to convert an integer to byte format
             //let vali: u32 = 0;
             //let val = hex::encode(vali.to_be_bytes());
             //stack.push(U256::from(0));
@@ -53,452 +56,425 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
             pc += 1;
         }
         //let push_opcodes : [u8;32] = [0x60,0x61,0x62,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f,0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,0x7b,0x7c,0x7d,0x7e,0x7f];
-        //The contains method in Rust is used to check if a slice (or any type that can be converted to a slice, like an array or a vector) contains a specific element. 
-        let push_opcodes : [u8; 32] = (96..=127).collect::<Vec<u8>>().try_into().expect("Wrong length");
+        //The contains method in Rust is used to check if a slice (or any type that can be converted to a slice, like an array or a vector) contains a specific element.
+        let push_opcodes: [u8; 32] = (96..=127)
+            .collect::<Vec<u8>>()
+            .try_into()
+            .expect("Wrong length");
         if push_opcodes.contains(&opcode) {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             println!("{opcode}");
-            pc +=1;
-            helper::index_rem_push(opcode.into(),&mut stack,&code,&mut pc);
+            pc += 1;
+            helper::index_rem_push(opcode.into(), &mut stack, &code, &mut pc);
         }
-        
+
         if opcode == 0x50 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             stack.remove(0);
             pc += 1;
         }
-        
-         //to stop a running terminal while running these steps press ctrl +c 
+
+        //to stop a running terminal while running these steps press ctrl +c
         if opcode == 0x1 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
             //let num3 = manageoverflowadd(num1,num2);
-            let (num3,overflow_status) = num1.overflowing_add(num2);
-            //so here we can use any of the 2 methods, one is using the already defined functions in rust and the other is defining the functions on our own 
-            helper::push_to_stack(&mut stack,num3);
+            let (num3, overflow_status) = num1.overflowing_add(num2);
+            //so here we can use any of the 2 methods, one is using the already defined functions in rust and the other is defining the functions on our own
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x2 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
-            //here multiplication is preformed as if the value goes goes of bound then it is wrapped around 
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
+            //here multiplication is preformed as if the value goes goes of bound then it is wrapped around
             //let maxval = U256::MAX;
             //let num3 = manageoverflowmul(num1,num2);
             //let num3 = num1.wrapping_mul(num2);
             //stack.push(num3);
             let (num3, overflow_status) = num1.overflowing_mul(num2);
-            //To implement a function that multiplies two U256 values and wraps on overflow, you can use the overflowing_mul method provided by the primitive_types::U256 type. 
-            helper::push_to_stack(&mut stack,num3);
+            //To implement a function that multiplies two U256 values and wraps on overflow, you can use the overflowing_mul method provided by the primitive_types::U256 type.
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x3 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
-            let (num3,underflow_status) = num1.overflowing_sub(num2);
-            helper::push_to_stack(&mut stack,num3);
+            let (num1, num2) = helper::pop2(&mut stack);
+            let (num3, underflow_status) = num1.overflowing_sub(num2);
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x4 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
-                helper::push_to_stack(&mut stack,U256::from(0));
+                helper::push_to_stack(&mut stack, U256::from(0));
+            } else {
+                let num3 = num1 / num2;
+                helper::push_to_stack(&mut stack, num3);
             }
-            else {
-                let num3 = num1/num2;
-                helper::push_to_stack(&mut stack,num3);
-            }
-
         }
         if opcode == 0x6 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
-                helper::push_to_stack(&mut stack,U256::from(0));
-            }
-            else {
-                let num3 = num1%num2;
-                helper::push_to_stack(&mut stack,num3);
+                helper::push_to_stack(&mut stack, U256::from(0));
+            } else {
+                let num3 = num1 % num2;
+                helper::push_to_stack(&mut stack, num3);
             }
         }
         if opcode == 0x8 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2,num3) = helper::pop3(&mut stack);
+            let (num1, num2, num3) = helper::pop3(&mut stack);
             if num3 == U256::from(0) {
-                helper::push_to_stack(&mut stack,U256::from(0));
-            }
-            else {
+                helper::push_to_stack(&mut stack, U256::from(0));
+            } else {
                 let (intermidate, overflow_status) = num1.overflowing_add(num2);
-                let result = intermidate%num3;
-                helper::push_to_stack(&mut stack,result);
+                let result = intermidate % num3;
+                helper::push_to_stack(&mut stack, result);
             }
         }
         if opcode == 0x09 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2,num3) = helper::pop3(&mut stack);
+            let (num1, num2, num3) = helper::pop3(&mut stack);
             if num3 == U256::from(0) {
-                helper::push_to_stack(&mut stack,U256::from(0));
+                helper::push_to_stack(&mut stack, U256::from(0));
             } else {
                 let r1 = num1 % num3;
                 let r2 = num2 % num3;
-                //using the properties of modulo congruences, nit do by after multiplication mod as that multiplication is not correct due to wrapping in overflow 
-                let (mut rem_total,overflow_status) = r1.overflowing_mul(r2);
-                rem_total = rem_total%num3;
-                helper::push_to_stack(&mut stack,rem_total);
+                //using the properties of modulo congruences, nit do by after multiplication mod as that multiplication is not correct due to wrapping in overflow
+                let (mut rem_total, overflow_status) = r1.overflowing_mul(r2);
+                rem_total = rem_total % num3;
+                helper::push_to_stack(&mut stack, rem_total);
             }
-            
         }
         if opcode == 0xa {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num1.pow(num2);
-            helper::push_to_stack(&mut stack,num3);
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0xb {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            //here still the number is present as U256 type so we need to to sign extention to ensure that it is correct 
-            //sor positive numbers we have to put all remaining bits as 0 but this is allready there so no chnage is required 
-            //in negative we have to put 1 to all places 
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            //here still the number is present as U256 type so we need to to sign extention to ensure that it is correct
+            //sor positive numbers we have to put all remaining bits as 0 but this is allready there so no chnage is required
+            //in negative we have to put 1 to all places
             //sice all inputs are u256 type so we can use bit masking to get a value at some index
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
             let indexbit = helper::index_bit(num1);
             let v = num2;
-            let smaller_num1 : u64 = num1.low_u64();
-            //for loop only takes normal integer values till u64 so we have to convert u256 to u64, also in this function if the size dont match then can cause data loss 
+            let smaller_num1: u64 = num1.low_u64();
+            //for loop only takes normal integer values till u64 so we have to convert u256 to u64, also in this function if the size dont match then can cause data loss
             let mask_bits = smaller_num1 + 1;
-            let mask_lenght =  32 - mask_bits;
+            let mask_lenght = 32 - mask_bits;
             let shift_num = v >> indexbit;
             if shift_num == U256::from(0) {
-                helper::push_to_stack(&mut stack,num2);
-            }
-            else {
-                let mut bitmask : U256 = U256::from(0);
-                for i in 0..mask_lenght{
+                helper::push_to_stack(&mut stack, num2);
+            } else {
+                let mut bitmask: U256 = U256::from(0);
+                for i in 0..mask_lenght {
                     bitmask = (bitmask) + 0xff;
-                    bitmask = bitmask << mask_bits*8;
+                    bitmask = bitmask << mask_bits * 8;
                 }
                 let resultant = bitmask + num2;
                 println!("result is {resultant}");
                 helper::push_to_stack(&mut stack, resultant);
             }
-
-
         }
-        if opcode ==0x5 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc+=1;
+        if opcode == 0x5 {
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            pc += 1;
             let (num1, num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
-                helper::push_to_stack(&mut stack , U256::from(0))
-            }
-            else {
-                if helper::checksign(num1) ^ helper::checksign(num2){
-                
+                helper::push_to_stack(&mut stack, U256::from(0))
+            } else {
+                if helper::checksign(num1) ^ helper::checksign(num2) {
                     //if both of the different sign then answer is negative
                     let mut v1 = num1;
                     let mut v2 = num2;
-                    
-                    if !helper::checksign(num1){
+
+                    if !helper::checksign(num1) {
                         v1 = helper::neg_pov(num1);
                         //if v1 was negative
-                    }
-                    else {
-    
+                    } else {
                         v2 = helper::neg_pov(num2);
-                        //if v2 was negative 
+                        //if v2 was negative
                     }
-                    
-                    let mut result = v1 / v2 ;//this is positive 
+
+                    let mut result = v1 / v2; //this is positive
                     result = helper::neg_pov(result);
                     helper::push_to_stack(&mut stack, result);
-                }
-                else {
+                } else {
                     //both of same sign then ans is positive
                     let mut v1 = num1;
-                    let mut v2 = num2; 
-                    if !helper::checksign(num1){
+                    let mut v2 = num2;
+                    if !helper::checksign(num1) {
                         v1 = helper::neg_pov(num1);
-                        v2 =  helper::neg_pov(num2);
+                        v2 = helper::neg_pov(num2);
                     }
-                    let result = v1 / v2 ;//this is positive 
+                    let result = v1 / v2; //this is positive
                     helper::push_to_stack(&mut stack, result);
-                    
                 }
             }
-            
         }
         if opcode == 0x7 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
             if num2 == U256::from(0) {
-                helper::push_to_stack(&mut stack , U256::from(0))
-            }
-            else {
-                if helper::checksign(num1) ^ helper::checksign(num2){
+                helper::push_to_stack(&mut stack, U256::from(0))
+            } else {
+                if helper::checksign(num1) ^ helper::checksign(num2) {
                     //if both of the different sign
                     let mut v1 = num1;
                     let mut v2 = num2;
-                    if !helper::checksign(num1){
+                    if !helper::checksign(num1) {
                         v1 = helper::neg_pov(num1);
                         //if num1 was negative
-                        let mut result = v1%v2;
+                        let mut result = v1 % v2;
                         result = helper::neg_pov(result);
                         helper::push_to_stack(&mut stack, result);
-                    }
-                    else {
+                    } else {
                         v2 = helper::neg_pov(num2);
-                        let mut result = v1%v2;
+                        let mut result = v1 % v2;
                         helper::push_to_stack(&mut stack, result);
-                        //if v2 was negative 
+                        //if v2 was negative
                     }
-                }
-                else {
+                } else {
                     let mut v1 = num1;
-                    let mut v2 = num2; 
-                    if !helper::checksign(num1){
-                        //num1 is negative 
+                    let mut v2 = num2;
+                    if !helper::checksign(num1) {
+                        //num1 is negative
                         v1 = helper::neg_pov(num1);
                         v2 = helper::neg_pov(num2);
-                        let mut result = v1%v2;
+                        let mut result = v1 % v2;
                         result = helper::neg_pov(result);
                         helper::push_to_stack(&mut stack, result);
-                        
-                    }
-                    else {
-                        let mut result = v1%v2;
-                        //both are positive 
+                    } else {
+                        let mut result = v1 % v2;
+                        //both are positive
                         helper::push_to_stack(&mut stack, result);
                     }
                 }
             }
-            
         }
         if opcode == 0x10 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num1 < num2;
             if num3 {
-                helper::push_to_stack(&mut stack , U256::from(1));
-            }
-            else {
-                helper::push_to_stack(&mut stack , U256::from(0));
+                helper::push_to_stack(&mut stack, U256::from(1));
+            } else {
+                helper::push_to_stack(&mut stack, U256::from(0));
             }
         }
         if opcode == 0x11 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num1 > num2;
             if num3 {
-                helper::push_to_stack(&mut stack , U256::from(1));
+                helper::push_to_stack(&mut stack, U256::from(1));
+            } else {
+                helper::push_to_stack(&mut stack, U256::from(0));
             }
-            else {
-                helper::push_to_stack(&mut stack , U256::from(0));
-            }            
         }
         if opcode == 0x12 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = helper::signed_comparison_greater(num1, num2);
-            if num3 == num2 && num2 != num1{
+            if num3 == num2 && num2 != num1 {
                 helper::push_to_stack(&mut stack, U256::from(1));
-            }
-            else {
+            } else {
                 helper::push_to_stack(&mut stack, U256::from(0));
             }
         }
         if opcode == 0x13 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = helper::signed_comparison_greater(num1, num2);
-            if num3 == num1 && num2 != num1{
+            if num3 == num1 && num2 != num1 {
                 helper::push_to_stack(&mut stack, U256::from(1));
-            }
-            else {
+            } else {
                 helper::push_to_stack(&mut stack, U256::from(0));
             }
         }
         if opcode == 0x14 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
-            if num2 == num1{
+            let (num1, num2) = helper::pop2(&mut stack);
+            if num2 == num1 {
                 helper::push_to_stack(&mut stack, U256::from(1));
-            }
-            else {
+            } else {
                 helper::push_to_stack(&mut stack, U256::from(0));
             }
         }
         if opcode == 0x15 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
             let num1 = stack.remove(0);
-            if num1 == U256::from(0){
-                helper::push_to_stack(&mut stack,  U256::from(1));
-            }
-            else {
-                helper::push_to_stack(&mut stack,  U256::from(0))
+            if num1 == U256::from(0) {
+                helper::push_to_stack(&mut stack, U256::from(1));
+            } else {
+                helper::push_to_stack(&mut stack, U256::from(0))
             }
         }
         if opcode == 0x19 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
             let num1 = stack.remove(0);
             let num2 = num1 ^ U256::MAX;
             helper::push_to_stack(&mut stack, num2);
         }
         if opcode == 0x16 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num1 & num2;
-            //&& ar for logical operator 
+            //&& ar for logical operator
             //& is for bitwise and, similarly in case of or |
             //helper::print_type_of(&num3);
-            helper::push_to_stack(&mut stack , num3);
-
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x17 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num1 | num2;
-            helper::push_to_stack(&mut stack , num3);
-
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x18 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num1 ^ num2;
-            helper::push_to_stack(&mut stack , num3);
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x1b {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num2 << num1;
-            helper::push_to_stack(&mut stack , num3);
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x1c {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             let num3 = num2 >> num1;
-            helper::push_to_stack(&mut stack , num3);
+            helper::push_to_stack(&mut stack, num3);
         }
         if opcode == 0x1d {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
+            let (num1, num2) = helper::pop2(&mut stack);
             //here the code can enter a very big loop if not restrict to 256 bit as after 256 bit shift the answer is not going to change
             //if let it enter the loop then program will stop
-            if num1 > U256::from(0) && num1 < U256::from(256){
-                if helper::checksign(num2){
-                    //num2 is positive 
+            if num1 > U256::from(0) && num1 < U256::from(256) {
+                if helper::checksign(num2) {
+                    //num2 is positive
                     let num3 = num2 >> num1;
-                    helper::push_to_stack(&mut stack , num3);
-                }
-                else {
-                    //num2 is negative 
-                    //the signed bit or the most significant bit is always the last bit so we have to add 1's there only 
+                    helper::push_to_stack(&mut stack, num3);
+                } else {
+                    //num2 is negative
+                    //the signed bit or the most significant bit is always the last bit so we have to add 1's there only
                     let size = helper::find_size(num2);
-                    let mask = helper::create_bitmask_of_1(num1,size);
+                    let mask = helper::create_bitmask_of_1(num1, size);
                     let pov_shift = num2 >> num1;
                     let num3 = pov_shift + mask;
                     helper::push_to_stack(&mut stack, num3);
                 }
-
-            }
-            else {
-                if helper::checksign(num2){
-                    //num2 is pov 
+            } else {
+                if helper::checksign(num2) {
+                    //num2 is pov
                     helper::push_to_stack(&mut stack, U256::from(0));
-                }
-                else {
+                } else {
                     helper::push_to_stack(&mut stack, U256::MAX);
                 }
             }
         }
         if opcode == 0x1a {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
-            let (num1,num2) = helper::pop2(&mut stack);
-            if num1 < U256::from(32){
+            let (num1, num2) = helper::pop2(&mut stack);
+            if num1 < U256::from(32) {
                 let mut byte_represenation = [0u8; 32];
                 num2.to_big_endian(&mut byte_represenation);
-                let smaller_num1 : usize = num1.low_u64()as usize ; //as for indexing use usize
+                let smaller_num1: usize = num1.low_u64() as usize; //as for indexing use usize
                 let result = byte_represenation[smaller_num1];
                 let final_result = U256::from(result);
-                helper::push_to_stack(&mut stack, final_result); 
-            }
-            else {
+                helper::push_to_stack(&mut stack, final_result);
+            } else {
                 helper::push_to_stack(&mut stack, U256::from(0));
             }
-            
         }
-        let dup_opcodes : [u8; 16] = (128..=143).collect::<Vec<u8>>().try_into().expect("Wrong length");
+        let dup_opcodes: [u8; 16] = (128..=143)
+            .collect::<Vec<u8>>()
+            .try_into()
+            .expect("Wrong length");
         if dup_opcodes.contains(&opcode) {
             pc += 1;
             let num2 = opcode - 128;
             let index = num2 as usize;
             let num1 = stack[index];
             helper::push_to_stack(&mut stack, num1);
-            
         }
-        
-        let swap_opcodes : [u8; 16] = (144..=159).collect::<Vec<u8>>().try_into().expect("Wrong length");
+
+        let swap_opcodes: [u8; 16] = (144..=159)
+            .collect::<Vec<u8>>()
+            .try_into()
+            .expect("Wrong length");
         if swap_opcodes.contains(&opcode) {
-            prev_opcode_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
             pc += 1;
             let num1 = stack.remove(0);
             let num2 = opcode - 144;
-            let index =  num2 as usize;
+            let index = num2 as usize;
             let intermidate = stack.remove(index);
-            stack.insert(0,intermidate);
-            stack.insert(index +1, num1);
+            stack.insert(0, intermidate);
+            stack.insert(index + 1, num1);
         }
 
         if opcode == 0x58 {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             //NOTE
             //Get the value of the program counter prior to the increment corresponding to this instruction
             helper::push_to_stack(&mut stack, pc.into());
@@ -506,229 +482,311 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
         }
 
         if opcode == 0x5a {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            //NOTE 
-            //dont know what to do here 
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+            //NOTE
+            //dont know what to do here
             pc += 1;
             helper::push_to_stack(&mut stack, U256::MAX);
         }
         //A byte offset refers to the position of a specific byte within a data structure, file, or memory block. It is a way to index or address bytes in a sequential manner, starting from a base address or the beginning of a data structure.
         if opcode == 0x56 {
             //let push_check = helper::find_valid_opcode()
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             //let num1 = stack.remove(0).low_u64() as usize;
             //if num1 < code.len() && code[num1] == 0x5b  {
-              //  pc = num1;
+            //  pc = num1;
             //}
             //else {
-              //  status = false;
-                //stack.clear();
-                //pc = pc + code.len();
+            //  status = false;
+            //stack.clear();
+            //pc = pc + code.len();
             //}
-            let invalid_indexes = helper::invalid_jumpdest(&code,&mut pc);
+            let invalid_indexes = helper::invalid_jumpdest(&code, &mut pc);
             let num1 = stack.remove(0).low_u64() as usize;
-            if num1 < code.len() && code[num1] == 0x5b{
-                if invalid_indexes.contains(&num1){
+            if num1 < code.len() && code[num1] == 0x5b {
+                if invalid_indexes.contains(&num1) {
                     status = false;
                     stack.clear();
                     pc = pc + code.len();
-                }
-                else {
+                } else {
                     pc = num1;
-
                 }
-            }
-            else {
+            } else {
                 status = false;
                 stack.clear();
                 pc = pc + code.len();
-
             }
         }
         if opcode == 0x5b {
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
             pc += 1;
         }
-        if opcode == 0x57{
-            prev_opcode_stack.insert(0,opcode);
-            prev_opcode_pcvalue_stack.insert(0,opcode);
-            
-            let invalid_indexes = helper::invalid_jumpdest(&code,&mut pc);
+        if opcode == 0x57 {
+            prev_opcode_stack.insert(0, opcode);
+            prev_opcode_pcvalue_stack.insert(0, opcode);
+
+            let invalid_indexes = helper::invalid_jumpdest(&code, &mut pc);
             let num1 = stack.remove(0).low_u64() as usize;
             let num2 = stack.remove(0);
 
-            if num1 < code.len() && code[num1] == 0x5b{
-                if invalid_indexes.contains(&num1){
+            if num1 < code.len() && code[num1] == 0x5b {
+                if invalid_indexes.contains(&num1) {
                     status = false;
                     stack.clear();
                     pc = pc + code.len();
-                }
-                else {
-                    if num2 == U256::from(0){
-                        pc +=1;
-                    }
-                    else {
+                } else {
+                    if num2 == U256::from(0) {
+                        pc += 1;
+                    } else {
                         pc = num1;
                     }
                 }
-            }
-            else {
+            } else {
                 status = false;
                 stack.clear();
                 pc = pc + code.len();
-
             }
         }
         if opcode == 0x52 {
-            pc +=1;
-            //here the size of the array is always a multiple of 32 
-            let (num1,num2) = helper::pop2(&mut stack);
+            pc += 1;
+            //here the size of the array is always a multiple of 32
+            let (num1, num2) = helper::pop2(&mut stack);
             //num1 is the index at which we have to store the value
-            //memory_array is the memory vector 
+            //memory_array is the memory vector
             let mut byte_form = [0u8; 32];
             num2.to_big_endian(&mut byte_form);
             let mut v2 = num1.low_u64() as usize;
             if v2 >= memory_array.len() {
-                let intermidate_add_0 = v2 - memory_array.len();//these are len and index so difference of 1 is adjusted 
+                let intermidate_add_0 = v2 - memory_array.len(); //these are len and index so difference of 1 is adjusted
                 helper::add0(&mut memory_array, intermidate_add_0);
                 let expected_final_size = memory_array.len() + byte_form.len();
-                let req_0 = (expected_final_size/32 +1) * 32 -expected_final_size;
-                for i in byte_form{
-                    memory_array.push(i);//pushed as we are now changing the size of the array
+                let req_0 = (expected_final_size / 32 + 1) * 32 - expected_final_size;
+                for i in byte_form {
+                    memory_array.push(i); //pushed as we are now changing the size of the array
                 }
                 helper::add0(&mut memory_array, req_0);
-            }
-            else{
-                //the max insert of of 32 
-                if v2 + byte_form.len() < memory_array.len(){
-                    for i in 0..byte_form.len(){
+            } else {
+                //the max insert of of 32
+                if v2 + byte_form.len() < memory_array.len() {
+                    for i in 0..byte_form.len() {
                         memory_array[v2] = byte_form[i];
-                        v2 +=1;
+                        v2 += 1;
                     }
-                }
-                else {
-                    //always the lenght of memory will be a multiple of 32 
+                } else {
+                    //always the lenght of memory will be a multiple of 32
                     helper::add0(&mut memory_array, 32);
-                    for i in 0..byte_form.len(){
+                    for i in 0..byte_form.len() {
                         memory_array[v2] = byte_form[i];
-                        v2 +=1;
+                        v2 += 1;
                     }
                 }
-
             }
 
             //let expected_final_size = byte_form.len() + mem_ptr;
             //let req_0 = (expected_final_size/32 + 1)*32;
-            
-            //here there is floor div so this step is required 
+
+            //here there is floor div so this step is required
             //if expected_final_size > memory_array.len(){
-              //  helper::add0(&mut memory_array,req_0);
+            //  helper::add0(&mut memory_array,req_0);
             //}
             //for i in 0..byte_form.len(){
-              //  memory_array[i] = byte_form[v2];
-                //v2 +=1;
-                //mem_ptr += 1;
+            //  memory_array[i] = byte_form[v2];
+            //v2 +=1;
+            //mem_ptr += 1;
             //}
 
             //let rem_index = memory_array.len()/32 +1;
             //let add_0_num = rem_index*32 - mem_ptr;
-            //mem_ptr is already 1 step ahead 
+            //mem_ptr is already 1 step ahead
             //helper::add0(&mut memory_array, add_0_num);
-            
+
             //Yes, the MSTORE opcode in Ethereum's Virtual Machine (EVM) can overwrite any value in memory. The MSTORE opcode is used to write a value to a specific location in memory. If you use MSTORE to write to a memory location that already has data, it will replace the existing value at that location with the new value.
-            // memory is a simple byte array, data stored in 32 byte format but can also be done as 1 byte 
-            //memory is also a data structure just like the stack but it is cleared once the execution of the txn is done 
-            //in the memory it has a specific format where it maintains the memory pointer, scratch space etc but for that the instructions are given in the bytcode by organinsing the bytecode in the required seqence and we dont have to implement it here from the opcode 
+            // memory is a simple byte array, data stored in 32 byte format but can also be done as 1 byte
+            //memory is also a data structure just like the stack but it is cleared once the execution of the txn is done
+            //in the memory it has a specific format where it maintains the memory pointer, scratch space etc but for that the instructions are given in the bytcode by organinsing the bytecode in the required seqence and we dont have to implement it here from the opcode
             //when the txn execution starts it starts with memory initialsed to 0 and When a transaction ends, the EVM automatically resets the memory state. This means that all the data stored in memory during the transaction is discarded, and the memory is prepared to be zeroed out for the next transaction.
-            // here we also have to implemment memory expansion 
-            //for inserting the value we need the value of the memory conuter and it is strored int the memory and all these values can be accessed by writing opcodes in the bytecode and we dont have to change anything in the opcode defn 
-
-
+            // here we also have to implemment memory expansion
+            //for inserting the value we need the value of the memory conuter and it is strored int the memory and all these values can be accessed by writing opcodes in the bytecode and we dont have to change anything in the opcode defn
         }
         if opcode == 0x51 {
-            pc +=1;
-            //the size of memory must change even if we just try to access an index 
+            pc += 1;
+            //the size of memory must change even if we just try to access an index
             let num1 = stack.remove(0).low_u64() as usize;
-            if num1 > memory_array.len() {
-                let intermidate_add_0 = num1 - memory_array.len();//these are len and index so difference of 1 is adjusted 
-                helper::add0(&mut memory_array, intermidate_add_0);
-                let req_0 = ((num1+32)/32 +1)*32-memory_array.len();
-                helper::add0(&mut memory_array, req_0);
-                let ans = &memory_array[num1..num1+32];
-                let ans_vec = ans.to_vec();
-                let result = helper::bytes_to_u256(ans_vec);
-                helper::push_to_stack(&mut stack, result);
-            }
-            else {
-                
-                if num1 + 32 < memory_array.len(){
-                    let ans = &memory_array[num1..num1+32];
-                    let ans_vec = ans.to_vec();
-                    let result = helper::bytes_to_u256(ans_vec);
-                    helper::push_to_stack(&mut stack, result);
-                }
-                else {
-                    let mut req_0 = 0;
-                    if helper::div_check(U256::from(num1),U256::from(32)){
-                        req_0 =((num1+32)/32)*32-memory_array.len();
-                    }
-                    else {
-                        req_0 =((num1+32)/32 +1)*32-memory_array.len();
-                    }
-                    
-                    helper::add0(&mut memory_array, req_0);
-                    let ans = &memory_array[num1..num1+32];
-                    let mut ans_vec = ans.to_vec();
-                    let result = helper::bytes_to_u256(ans_vec);
-                    helper::push_to_stack(&mut stack, result);
-
-                } 
-            }
+            helper::memory_access(num1, 32, &mut memory_array, &mut stack);
+            
+            let ans = &memory_array[num1..num1 + 32];
+            let mut ans_vec = ans.to_vec();
+            let result = helper::bytes_to_u256(ans_vec);
+            helper::push_to_stack(&mut stack, result);
         }
-        if opcode == 0x53{
-            pc +=1;
-            let (num1,num2) = helper::pop2(&mut stack);
+        if opcode == 0x53 {
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
             let mut byte_form = [0u8; 32];
             num2.to_big_endian(&mut byte_form);
             println!("{:?}", byte_form);
             let mut v1 = num1.low_u64() as usize;
-            if v1 >= memory_array.len(){
-                let intermidate_add_0 = v1 - memory_array.len();//these are len and index so difference of 1 is adjusted 
+            if v1 >= memory_array.len() {
+                let intermidate_add_0 = v1 - memory_array.len(); //these are len and index so difference of 1 is adjusted
                 helper::add0(&mut memory_array, intermidate_add_0);
                 let expected_final_size = memory_array.len() + byte_form.len();
-                let req_0 = (expected_final_size/32 +1) * 32 -expected_final_size;
-                
+                let req_0 = (expected_final_size / 32 + 1) * 32 - expected_final_size;
+
                 helper::add0(&mut memory_array, req_0);
                 memory_array[v1] = byte_form[31];
                 println!("{:?}", memory_array);
-            }
-            else {
+            } else {
                 memory_array[v1] = byte_form[31];
             }
         }
         if opcode == 0x59 {
-            pc +=1;
+            pc += 1;
             let result = memory_array.len();
             helper::push_to_stack(&mut stack, U256::from(result));
+            
         }
+        if opcode == 0x20 {
+            pc += 1;
+            let (num1, num2) = helper::pop2(&mut stack);
+            //num1 is the position of reading or the index and num2 is the offset
+            let v1 = num1.low_u64() as usize; 
+            let v2 = num2.low_u64() as usize; 
+            helper::memory_access(v1, v2, &mut memory_array, &mut stack);
+            let mut hasher = Keccak::v256();
+            let ans = &memory_array[v1..v1 + v2];
+            hasher.update(ans);
+            let mut output = [0u8; 32];
+            hasher.finalize(&mut output);
+            let result = helper::bytes_to_u256(output.to_vec());
+            helper::push_to_stack(&mut stack, result);
+            //the hash func takes in a bytes string reference or slice of bytes 
+            //this opcode accesses the memory so we have to take care of memory expansion
 
-        if opcode == 0x20{
+        }
+        if opcode == 0x30 {
+            pc +=1;
+            let to = _tx_to;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x33 {
+            pc +=1;
+            let to = _tx_from;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x32 {
+            pc +=1;
+            let to = _tx_origin;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x3a {
+            pc +=1;
+            let to = _tx_gasprice;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x48 {
+            pc +=1;
+            let to = _block_basefee;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x41 {
+            pc +=1;
+            let to = _block_coinbase;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x42 {
+            pc +=1;
+            let to = _block_timestamp;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x43 {
+            pc +=1;
+            let to = _block_number;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x44 {
+            pc +=1;
+            let to = _block_difficulty;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x45 {
+            pc +=1;
+            let to = _block_gaslimit;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x46 {
+            pc +=1;
+            let to = _block_chainid;
+            let trimmed_hex = to.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x40 {
+            pc += 1;
+            let num1 = stack.remove(0);
+            let mut input  = [0u8; 32];
+            num1.to_big_endian(&mut input);
+            let input_str = &input[0..32];
+            let trimmed_hex = _block_number.trim_start_matches("0x");
+            // Remove the "0x" prefix if it's there for this function 
+            let number_u256 = U256::from_str_radix(trimmed_hex, 16).unwrap();
+            if (number_u256 > U256::from(256) && num1 < number_u256 && num1 > number_u256 - U256::from(256)) || (number_u256 < U256::from(256) && num1 < number_u256){    
+                let mut hasher = Keccak::v256();
+                hasher.update(input_str);
+                let mut output = [0u8; 32];
+                hasher.finalize(&mut output);
+                let result = helper::bytes_to_u256(output.to_vec());
+                helper::push_to_stack(&mut stack, result);
+            }
+            else {
+                helper::push_to_stack(&mut stack, U256::from(0));
+            }
+            
+        }
+        if opcode == 0x31 {
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
-        
-        //invalid opcode 
+
+
+        //invalid opcode
         if opcode > 0x9f {
             status = false;
             break;
         }
-
-        
-        
-        
     }
 
     // TODO: Implement me
@@ -738,4 +796,3 @@ pub fn evm(_code: impl AsRef<[u8]>) -> EvmResult {
         success: status,
     };
 }
-
