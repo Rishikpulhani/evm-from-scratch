@@ -15,7 +15,7 @@
 // if we initialise a project in rust using cargo new projectname but then chnage the name of the project from outside without chnaging the name in the package section of cargo.toml then it will not cause  problem, here the cargo was initialsed using evm package name but then it was changed to rust
 //here evm is refering to ur package name only
 //when we create a new package here evm then the files lib.rs and main.rs are named actually after the package name, so to use some function of library crate we have to write this statement of use evm::evm, as evm is the package name so lib.rs name is also evm, the func name is also evm
-use evm::evm;
+use evm::{evm, Block, default_block_data_internal_data, default_block_data, Tx, default_tx_data, default_tx_data_internal_data, State_Account_Data, default_state,default_state_data};
 use primitive_types::U256; //imported crate as dependency
 use serde::{Serialize, Deserialize}; //imported crate as dependency
 use std::collections::HashMap;
@@ -33,78 +33,18 @@ struct Evmtest {
     state : HashMap<String, State_Account_Data>,
     expect: Expect,
 }
-fn default_tx_data() -> Tx{
-    Tx{
-        to : String::from("0x00".to_string()),
-        from : String::from("0x00".to_string()),
-        origin : String::from("0x00".to_string()),
-        gasprice : String::from("0x00".to_string()),
-    }
-}
-fn default_block_data() -> Block{
-    Block{
-        basefee : String::from("0x00".to_string()),
-        coinbase : String::from("0x00".to_string()),
-        timestamp : String::from("0x00".to_string()),
-        number : String::from("0x00".to_string()),
-        difficulty : String::from("0x00".to_string()),
-        gaslimit : String::from("0x00".to_string()),
-        chainid : String::from("0x00".to_string()),
-    }
-}
-fn default_tx_data_internal_data() -> String{
-    String::from("0x00".to_string())
-}
-fn default_block_data_internal_data() -> String{
-    String::from("0x00".to_string())
-}
-fn default_state_data() -> String{
-    String::from("0x00".to_string())
-}
-fn default_state() -> HashMap<String, State_Account_Data>{
-    HashMap::new()
-}
+
+
+
 
 #[derive(Debug,Serialize, Deserialize)]
 struct Code {
     asm: String,
     bin: String,
 }
-#[derive(Debug,Serialize, Deserialize)]
-struct State_Account_Data{
-    #[serde(default = "default_state_data")]
-    balance : String,//using hashmap as the key value i.e the address of the account will be given in the push statement 
-}
-#[derive(Debug,Serialize, Deserialize)]
-struct Tx {
-    #[serde(default = "default_tx_data_internal_data")]//this attribute is used to assign default values to fileds of a struct if their value is not given 
-    to: String,
-    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified 
-    #[serde(default = "default_tx_data_internal_data")]
-    from: String,
-    #[serde(default = "default_tx_data_internal_data")]
-    origin : String,
-    #[serde(default = "default_tx_data_internal_data")]
-    gasprice : String,
-}
-#[derive(Debug,Serialize, Deserialize)]
-struct Block {
-    #[serde(default = "default_block_data_internal_data")]//this attribute is used to assign default values to fileds of a struct if their value is not given 
-    basefee: String,
-    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified 
-    #[serde(default = "default_block_data_internal_data")]
-    coinbase : String,
-    #[serde(default = "default_block_data_internal_data")]
-    timestamp : String,
-    #[serde(default = "default_block_data_internal_data")]
-    number : String,
-    #[serde(default = "default_block_data_internal_data")]
-    difficulty : String,
-    #[serde(default = "default_block_data_internal_data")]
-    gaslimit : String,
-    #[serde(default = "default_block_data_internal_data")]
-    chainid : String,
-}
+
+
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Expect {
     stack: Option<Vec<String>>,

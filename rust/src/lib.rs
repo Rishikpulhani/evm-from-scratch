@@ -1,5 +1,7 @@
 use primitive_types::U256;
 use tiny_keccak::{Hasher, Keccak};
+use serde::{Serialize, Deserialize};
+use std::collections::HashMap;
 mod helper;
 
 // info on U256 and its implementation
@@ -9,10 +11,75 @@ pub struct EvmResult {
     pub stack: Vec<U256>,
     pub success: bool,
 }
+#[derive(Debug,Serialize, Deserialize)]
+pub struct Block {
+    #[serde(default = "default_block_data_internal_data")]//this attribute is used to assign default values to fileds of a struct if their value is not given 
+    pub basefee: String,
+    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified 
+    #[serde(default = "default_block_data_internal_data")]
+    pub coinbase : String,
+    #[serde(default = "default_block_data_internal_data")]
+    pub timestamp : String,
+    #[serde(default = "default_block_data_internal_data")]
+    pub number : String,
+    #[serde(default = "default_block_data_internal_data")]
+    pub difficulty : String,
+    #[serde(default = "default_block_data_internal_data")]
+    pub gaslimit : String,
+    #[serde(default = "default_block_data_internal_data")]
+    pub chainid : String,
+}
+pub fn default_block_data() -> Block{
+    Block{
+        basefee : String::from("0x00".to_string()),
+        coinbase : String::from("0x00".to_string()),
+        timestamp : String::from("0x00".to_string()),
+        number : String::from("0x00".to_string()),
+        difficulty : String::from("0x00".to_string()),
+        gaslimit : String::from("0x00".to_string()),
+        chainid : String::from("0x00".to_string()),
+    }
+}
+pub fn default_block_data_internal_data() -> String{
+    String::from("0x00".to_string())
+}
+#[derive(Debug,Serialize, Deserialize)]
+pub struct Tx {
+    #[serde(default = "default_tx_data_internal_data")]//this attribute is used to assign default values to fileds of a struct if their value is not given 
+    pub to: String,
+    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified 
+    #[serde(default = "default_tx_data_internal_data")]
+    pub from: String,
+    #[serde(default = "default_tx_data_internal_data")]
+    pub origin : String,
+    #[serde(default = "default_tx_data_internal_data")]
+    pub gasprice : String,
+}
+pub fn default_tx_data() -> Tx{
+    Tx{
+        to : String::from("0x00".to_string()),
+        from : String::from("0x00".to_string()),
+        origin : String::from("0x00".to_string()),
+        gasprice : String::from("0x00".to_string()),
+    }
+}
 
-
+pub fn default_tx_data_internal_data() -> String{
+    String::from("0x00".to_string())
+}
+#[derive(Debug,Serialize, Deserialize)]
+pub struct State_Account_Data{
+    #[serde(default = "default_state_data")]
+    pub balance : String,//using hashmap as the key value i.e the address of the account will be given in the push statement 
+}
+pub fn default_state_data() -> String{
+    String::from("0x00".to_string())
+}
+pub fn default_state() -> HashMap<String, State_Account_Data>{
+    HashMap::new()
+}
 //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &Vec<u8>, _tx_from : &Vec<u8>) -> EvmResult
-pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String, _block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String) -> EvmResult {
+pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String, _block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &HashMap<String, State_Account_Data>) -> EvmResult {
     let mut stack: Vec<U256> = Vec::new();
     let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
@@ -777,6 +844,28 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             
         }
         if opcode == 0x31 {
+            pc +=1;
+            let num1 = stack.remove(0);
+            let mut num1_bytes = [0u8;32];
+            num1.to_big_endian(&mut num1_bytes);
+            let num1_str = hex::encode(&num1_bytes);
+            let trimmed = num1_str.trim_start_matches('0');
+            let mut extension = String::from("0x");
+            extension.push_str(trimmed);
+            println!("{extension}");
+            
+            let result = match _account_state.get(&extension) {
+                Some(value) => &value.balance,
+                None => "0x0",//if the hash map does not have the value for this key  
+            };
+            
+            let ans = U256::from_str_radix(result, 16).unwrap();
+            println!("{ans}");
+
+            helper::push_to_stack(&mut stack, ans);
+
+        }
+        if opcode == 0x34 {
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
