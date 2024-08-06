@@ -255,3 +255,9 @@ pub fn memory_access(num1 : usize,offset : usize, memory_array : &mut Vec<u8>, s
         }
     }
 }
+pub fn hex_str_to_u256_push (to : &String, stack : &mut Vec<U256>){
+    let trimmed_hex = to.trim_start_matches("0x");
+    // Remove the "0x" prefix if it's there for this function 
+    let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
+    push_to_stack(stack, result);
+}

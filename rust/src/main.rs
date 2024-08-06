@@ -15,7 +15,7 @@
 // if we initialise a project in rust using cargo new projectname but then chnage the name of the project from outside without chnaging the name in the package section of cargo.toml then it will not cause  problem, here the cargo was initialsed using evm package name but then it was changed to rust
 //here evm is refering to ur package name only
 //when we create a new package here evm then the files lib.rs and main.rs are named actually after the package name, so to use some function of library crate we have to write this statement of use evm::evm, as evm is the package name so lib.rs name is also evm, the func name is also evm
-use evm::{evm, Block, default_block_data_internal_data, default_block_data, Tx, default_tx_data, default_tx_data_internal_data, State_Account_Data, default_state,default_state_data};
+use evm::{evm, Block, default_block_data_internal_data, default_block_data, Tx, default_tx_data, default_tx_data_internal_data,default_tx_data_internal_data_data, State_Account_Data, default_state,default_state_data};
 use primitive_types::U256; //imported crate as dependency
 use serde::{Serialize, Deserialize}; //imported crate as dependency
 use std::collections::HashMap;
@@ -69,6 +69,8 @@ fn main() {
         //println!("{:?}", tx_to);
         //println!("{:?}", tx_from);
         let tx_origin = &test.tx.origin;
+        let tx_value = &test.tx.value;
+        let tx_data = &test.tx.data;
         let tx_gasprice = &test.tx.gasprice;
         let block_basefee = &test.block.basefee;
         let block_coinbase  = &test.block.coinbase;
@@ -80,7 +82,7 @@ fn main() {
         let account_state = &test.state;
 
 
-        let result = evm(&code,tx_to, to_from, tx_origin, tx_gasprice, block_basefee,block_coinbase, block_timestamp, block_number, block_difficulty, block_gaslimit, block_chainid, account_state);
+        let result = evm(&code,tx_to, to_from, tx_origin, tx_gasprice,tx_value, tx_data, block_basefee,block_coinbase, block_timestamp, block_number, block_difficulty, block_gaslimit, block_chainid, account_state);
         //let result = evm(&code, &tx_to,&tx_from);
 
         let mut expected_stack: Vec<U256> = Vec::new();

@@ -43,6 +43,9 @@ pub fn default_block_data() -> Block{
 pub fn default_block_data_internal_data() -> String{
     String::from("0x00".to_string())
 }
+pub fn default_tx_data_internal_data_data() -> String{
+    String::from("".to_string())//here give an empty string as the function we are using in the opcode calldatasize is hex decode and in case of the data field the input is a hex string and not a hex number stored as a string for the json file 
+}
 #[derive(Debug,Serialize, Deserialize)]
 pub struct Tx {
     #[serde(default = "default_tx_data_internal_data")]//this attribute is used to assign default values to fileds of a struct if their value is not given 
@@ -54,6 +57,10 @@ pub struct Tx {
     pub origin : String,
     #[serde(default = "default_tx_data_internal_data")]
     pub gasprice : String,
+    #[serde(default = "default_tx_data_internal_data")]
+    pub value : String,
+    #[serde(default = "default_tx_data_internal_data_data")]
+    pub data : String,
 }
 pub fn default_tx_data() -> Tx{
     Tx{
@@ -61,6 +68,8 @@ pub fn default_tx_data() -> Tx{
         from : String::from("0x00".to_string()),
         origin : String::from("0x00".to_string()),
         gasprice : String::from("0x00".to_string()),
+        value : String::from("0x00".to_string()),
+        data : String::from("".to_string()),
     }
 }
 
@@ -79,7 +88,7 @@ pub fn default_state() -> HashMap<String, State_Account_Data>{
     HashMap::new()
 }
 //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &Vec<u8>, _tx_from : &Vec<u8>) -> EvmResult
-pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String, _block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &HashMap<String, State_Account_Data>) -> EvmResult {
+pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &HashMap<String, State_Account_Data>) -> EvmResult {
     let mut stack: Vec<U256> = Vec::new();
     let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
@@ -736,90 +745,57 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
         if opcode == 0x30 {
             pc +=1;
             let to = _tx_to;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x33 {
             pc +=1;
             let to = _tx_from;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x32 {
             pc +=1;
             let to = _tx_origin;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x3a {
             pc +=1;
             let to = _tx_gasprice;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x48 {
             pc +=1;
             let to = _block_basefee;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x41 {
             pc +=1;
             let to = _block_coinbase;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x42 {
             pc +=1;
             let to = _block_timestamp;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x43 {
             pc +=1;
             let to = _block_number;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x44 {
             pc +=1;
             let to = _block_difficulty;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x45 {
             pc +=1;
             let to = _block_gaslimit;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x46 {
             pc +=1;
             let to = _block_chainid;
-            let trimmed_hex = to.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
-            let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            helper::push_to_stack(&mut stack, result);
+            helper::hex_str_to_u256_push(&to,&mut stack);
         }
         if opcode == 0x40 {
             pc += 1;
@@ -850,6 +826,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             num1.to_big_endian(&mut num1_bytes);
             let num1_str = hex::encode(&num1_bytes);
             let trimmed = num1_str.trim_start_matches('0');
+            //u256 -> bytes array -> string 
             let mut extension = String::from("0x");
             extension.push_str(trimmed);
             println!("{extension}");
@@ -866,6 +843,43 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
 
         }
         if opcode == 0x34 {
+            pc +=1;
+            let to = _tx_value;
+            helper::hex_str_to_u256_push(&to,&mut stack);
+            
+        }
+        if opcode == 0x35 {
+            pc += 1;
+            let num1 = stack.remove(0);
+            let offset = num1.low_u64() as usize;
+            //let trimmed_data = _tx_data.trim_start_matches('0');
+            println!("{_tx_data}");
+            let mut bytes_form : Vec<u8> = hex::decode(_tx_data).unwrap();
+            //not use the as_bytes method on string as that will convert each character of the tsring to its ascii value but 1 bytes is of 2characters so use the hex::decode() function when trying to convert a hexadecimal string to bytes 
+
+            if offset + 32 >= bytes_form.len(){
+                let req_0 = offset+32-bytes_form.len();
+                for i in 0..req_0{
+                    bytes_form.push(00);
+                }
+            }
+            println!("{:?}",bytes_form);
+            let resultant = &bytes_form[offset..offset+32].to_vec();
+            println!("{:?}",resultant);
+            let result = helper::bytes_to_u256(resultant.to_vec());
+            helper::push_to_stack(&mut stack, result);
+        }
+        if opcode == 0x36 {
+            pc +=1;
+            let mut bytes_form : Vec<u8> = hex::decode(_tx_data).unwrap();
+            let size = bytes_form.len();
+            println!("{size}");
+            helper::push_to_stack(&mut stack, U256::from(size));
+        }
+        if opcode == 0x37 {
+            pc +=1;
+        }
+        if opcode == 0x38 {
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
