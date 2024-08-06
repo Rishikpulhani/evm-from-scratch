@@ -102,6 +102,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
     let mem_ptr: usize = 0;
 
     let code = _code.as_ref();
+    
     println!("value of code is {:?}", code);
     //let tx_to = _tx_to;
     //let tx_from = _tx_from;
@@ -878,8 +879,50 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
         }
         if opcode == 0x37 {
             pc +=1;
+            let mut bytes_form : Vec<u8> = hex::decode(_tx_data).unwrap();
+            let (_destoffset , _offset, _size) = helper::pop3(&mut stack);
+            let mut destoffset = _destoffset.low_u64() as usize;
+            let mut offset = _offset.low_u64() as usize;
+            let mut size = _size.low_u64() as usize;
+            helper::memory_access(destoffset, 32, &mut memory_array, &mut stack);
+            if offset + 32 >= bytes_form.len(){
+                let req_0 = offset+32-bytes_form.len();
+                for i in 0..req_0{
+                    bytes_form.push(00);
+                }
+            }
+            let resultant = &bytes_form[offset..offset+size ].to_vec();
+            for i in 0..size {
+                memory_array[destoffset] = resultant[i];
+                destoffset +=1;
+            }
         }
         if opcode == 0x38 {
+            pc +=1;
+            helper::push_to_stack(&mut stack, U256::from(code.len()));
+        }
+        if opcode == 0x39 {
+            pc +=1;
+            let (_destoffset , _offset, _size) = helper::pop3(&mut stack);
+            let mut destoffset = _destoffset.low_u64() as usize;
+            let mut offset = _offset.low_u64() as usize;
+            let mut size = _size.low_u64() as usize;
+            let by = code.clone();
+            let mut bytes_form = by.to_vec();
+            helper::memory_access(destoffset, 32, &mut memory_array, &mut stack);
+            if offset + 32 >= bytes_form.len(){
+                let req_0 = offset+32-bytes_form.len();
+                for i in 0..req_0{
+                    bytes_form.push(00);
+                }
+            }
+            let resultant = &bytes_form[offset..offset+size].to_vec();
+            for i in 0..size {
+                memory_array[destoffset] = resultant[i];
+                destoffset +=1;
+            }
+        }
+        if opcode == 0x3b {
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }

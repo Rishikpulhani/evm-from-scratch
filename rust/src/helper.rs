@@ -236,6 +236,8 @@ pub fn memory_access(num1 : usize,offset : usize, memory_array : &mut Vec<u8>, s
     
     if num1 > memory_array.len() {
         let intermidate_add_0 = num1 - memory_array.len(); //these are len and index so difference of 1 is adjusted
+        //offset is the size of the memory being accessed 
+        //num1 is the index of the place from where the memory will be accessed 
         add0(memory_array, intermidate_add_0);
         let req_0 = ((num1 + offset) / 32 + 1) * 32 - memory_array.len();
         add0(memory_array, req_0);
