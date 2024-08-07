@@ -76,19 +76,45 @@ pub fn default_tx_data() -> Tx{
 pub fn default_tx_data_internal_data() -> String{
     String::from("0x00".to_string())
 }
+//Serde also handles nested structures. For example, the state field in Evmtest is a HashMap<String, State_Account_Data>, and Serde will recursively deserialize the state object in the JSON into this map.
 #[derive(Debug,Serialize, Deserialize)]
-pub struct State_Account_Data{
+pub struct StateAccountData{
     #[serde(default = "default_state_data")]
     pub balance : String,//using hashmap as the key value i.e the address of the account will be given in the push statement 
+    #[serde(default = "default_statecode")]
+    pub code : Statecode,
+    //To handle a null value in a JSON object using the serde_json crate, you need to ensure that the corresponding field in your Rust struct is of type Option<T>. This tells serde_json that the field can be either a value of type T or null.
 }
 pub fn default_state_data() -> String{
     String::from("0x00".to_string())
 }
-pub fn default_state() -> HashMap<String, State_Account_Data>{
+#[derive(Debug,Serialize, Deserialize)]
+pub struct Code {
+    pub asm: String,
+    pub bin: String,
+}
+#[derive(Debug,Serialize, Deserialize)]
+pub struct Statecode {
+    pub asm: Option<String>,
+    pub bin: String,
+}
+
+pub fn default_statecode_internal() -> String{
+  String::from("".to_string())
+}
+pub fn default_statecode() -> Statecode{
+    Statecode{
+        asm : Some(String::from("".to_string())),
+        bin : String::from("".to_string()),
+    }
+}
+
+pub fn default_state() -> HashMap<String, StateAccountData>{
     HashMap::new()
 }
+
 //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &Vec<u8>, _tx_from : &Vec<u8>) -> EvmResult
-pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &HashMap<String, State_Account_Data>) -> EvmResult {
+pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>) -> EvmResult {
     let mut stack: Vec<U256> = Vec::new();
     let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
@@ -823,19 +849,18 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
         if opcode == 0x31 {
             pc +=1;
             let num1 = stack.remove(0);
-            let mut num1_bytes = [0u8;32];
-            num1.to_big_endian(&mut num1_bytes);
-            let num1_str = hex::encode(&num1_bytes);
-            let trimmed = num1_str.trim_start_matches('0');
-            //u256 -> bytes array -> string 
-            let mut extension = String::from("0x");
-            extension.push_str(trimmed);
-            println!("{extension}");
-            
-            let result = match _account_state.get(&extension) {
-                Some(value) => &value.balance,
-                None => "0x0",//if the hash map does not have the value for this key  
+            let address = helper::get_addr(num1);
+            let result = match _account_state{
+                Some(value) => match value.get(&address) {
+                    Some(val) => &val.balance,
+                    None => "0x0",
+                },
+                None => "0x0",
             };
+            //let result = match _account_state.get(&extension) {
+              //  Some(value) => &value.balance,
+               // None => "0x0",//if the hash map does not have the value for this key  
+            //};
             
             let ans = U256::from_str_radix(result, 16).unwrap();
             println!("{ans}");
@@ -923,9 +948,83 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             }
         }
         if opcode == 0x3b {
+            pc +=1;
+            let num1 = stack.remove(0);
+            let address = helper::get_addr(num1);
+            let result = match _account_state{
+                Some(value) => match value.get(&address) {
+                    Some(val) => &val.code.bin,
+                    None => "0x0",
+                },
+                None => "",
+            };
+            //let result = match _account_state.get(&extension) {
+              //  Some(value) => &value.balance,
+               // None => "0x0",//if the hash map does not have the value for this key  
+            //};
+            let ans = hex::decode(result).unwrap();
+            //let ans = U256::from_str_radix(result, 16).unwrap();
+            println!("{:?}",ans);
+
+            helper::push_to_stack(&mut stack, U256::from(ans.len()));
+
+        }
+        if opcode == 0x3c {
+            pc +=1;
+            let (addr, _destoffset, _offset, _size) = helper::pop4(&mut stack);
+            let address = helper::get_addr(addr);
+            let mut destoffset = _destoffset.low_u64() as usize;
+            let offset = _offset.low_u64() as usize;
+            let size = _size.low_u64() as usize;
+            helper::memory_access(destoffset, size, &mut memory_array, &mut stack);
+            let result = match _account_state{
+                Some(value) => match value.get(&address) {
+                    Some(val) => &val.code.bin,
+                    None => "0x0",
+                },
+                None => "",
+            };
+            let mut ans = hex::decode(result).unwrap();
+            println!("{:?}",ans);
+            if offset + size > ans.len(){
+                for i in 0..(offset + size - ans.len()){
+                    ans.push(00);
+                }
+            }
+            for i in offset..offset+size{
+                memory_array[destoffset] = ans[i];
+                destoffset += 1;
+            }
+
+        }
+        if opcode == 0x3f {
+            pc +=1;
+            
+            let num1 = stack.remove(0);
+            let address = helper::get_addr(num1);
+            match _account_state{
+                Some(value) => match value.get(&address) {
+                    Some(val) => {
+                        let result = String::from(&val.code.bin);
+                        let mut hasher = Keccak::v256();
+                        //let ans = &memory_array[v1..v1 + v2];
+                        hasher.update(&hex::decode(result).unwrap());
+                        let mut output = [0u8; 32];
+                        hasher.finalize(&mut output);
+                        let ans = helper::bytes_to_u256(output.to_vec());
+                        helper::push_to_stack(&mut stack, ans);
+                    },
+                    None => helper::push_to_stack(&mut stack, U256::from(0)),
+                },
+                None => helper::push_to_stack(&mut stack, U256::from(0)),//if want to do noting then return this 
+            };
+           
+        }
+        if opcode == 0x47{
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
+
 
 
         //invalid opcode

@@ -15,7 +15,7 @@
 // if we initialise a project in rust using cargo new projectname but then chnage the name of the project from outside without chnaging the name in the package section of cargo.toml then it will not cause  problem, here the cargo was initialsed using evm package name but then it was changed to rust
 //here evm is refering to ur package name only
 //when we create a new package here evm then the files lib.rs and main.rs are named actually after the package name, so to use some function of library crate we have to write this statement of use evm::evm, as evm is the package name so lib.rs name is also evm, the func name is also evm
-use evm::{evm, Block, default_block_data_internal_data, default_block_data, Tx, default_tx_data, default_tx_data_internal_data,default_tx_data_internal_data_data, State_Account_Data, default_state,default_state_data};
+use evm::{evm, Block, default_block_data_internal_data, default_block_data, Tx, default_tx_data, default_tx_data_internal_data, default_state,default_state_data,Code,default_statecode,Statecode, StateAccountData};
 use primitive_types::U256; //imported crate as dependency
 use serde::{Serialize, Deserialize}; //imported crate as dependency
 use std::collections::HashMap;
@@ -29,19 +29,14 @@ struct Evmtest {
     tx: Tx,//the filed name should be same to that in the json object as here string matching is done 
     #[serde(default = "default_block_data")]
     block : Block,
-    #[serde(default = "default_state")]
-    state : HashMap<String, State_Account_Data>,
+    
+    state : Option<HashMap<String, StateAccountData>>,
     expect: Expect,
 }
 
 
 
 
-#[derive(Debug,Serialize, Deserialize)]
-struct Code {
-    asm: String,
-    bin: String,
-}
 
 
 
@@ -55,7 +50,10 @@ struct Expect {
 
 fn main() {
     let text = std::fs::read_to_string("../evm.json").unwrap();
+    println!("{text}");
     let data: Vec<Evmtest> = serde_json::from_str(&text).unwrap();
+    //the serde json is smart enough to automatically put the given data in the form of a string in json format to the types specified by us 
+    //so here when some alue is null we have to assign it to an option enum and then handle it 
 
     let total = data.len();
 

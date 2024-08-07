@@ -104,6 +104,13 @@ pub fn pop3(stack: &mut Vec<U256>) -> (U256, U256, U256) {
     let num3 = stack.remove(0);
     (num1, num2, num3)
 }
+pub fn pop4(stack: &mut Vec<U256>) -> (U256, U256, U256, U256) {
+    let num1 = stack.remove(0);
+    let num2 = stack.remove(0);
+    let num3 = stack.remove(0);
+    let num4 = stack.remove(0);
+    (num1, num2, num3, num4)
+}
 pub fn push_to_stack(stack: &mut Vec<U256>, element: U256) {
     stack.insert(0, element);
 }
@@ -233,11 +240,11 @@ pub fn bytes_to_u256_ref(byte_rep: &Vec<u8>) -> U256 {
     result
 }
 pub fn memory_access(num1 : usize,offset : usize, memory_array : &mut Vec<u8>, stack : &mut Vec<U256>) {
-    
+    //offset is the size of the memory being accessed 
+    //num1 is the index of the place from where the memory will be accessed
     if num1 > memory_array.len() {
         let intermidate_add_0 = num1 - memory_array.len(); //these are len and index so difference of 1 is adjusted
-        //offset is the size of the memory being accessed 
-        //num1 is the index of the place from where the memory will be accessed 
+         
         add0(memory_array, intermidate_add_0);
         let req_0 = ((num1 + offset) / 32 + 1) * 32 - memory_array.len();
         add0(memory_array, req_0);
@@ -262,4 +269,15 @@ pub fn hex_str_to_u256_push (to : &String, stack : &mut Vec<U256>){
     // Remove the "0x" prefix if it's there for this function 
     let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
     push_to_stack(stack, result);
+}
+pub fn get_addr(addr : U256) -> String{
+    let mut addr_bytes = [0u8;32];
+    addr.to_big_endian(&mut addr_bytes);
+    let addr_str = hex::encode(&addr_bytes);
+    let trimmed = addr_str.trim_start_matches('0');
+    //u256 -> bytes array -> string 
+    let mut address = String::from("0x");
+    address.push_str(trimmed);//address of the contract 
+    println!("{address}");
+    address
 }
