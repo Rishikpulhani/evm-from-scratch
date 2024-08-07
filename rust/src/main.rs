@@ -49,6 +49,13 @@ struct Expect {
 }
 
 fn main() {
+//STORAGE
+//GLOBAL VARIABLE 
+//let can only be used to declare variables inside a function 
+let mut storage : HashMap<U256,U256> = HashMap::new();
+//here we are using hashmaps and nit vector as in hashmaps we are not restricted to limited storage slots which is the max value of usize and also we are able to implement the key value pairs and the empty storage slots that is no defined key values are empty and using match can be set to 0 and wont require storage place like in the actual evm
+//this is seperate for each contract so define this in the main.rs which interacts with the bytecode of the entire contract not only a transaction of that contract as in case of memory 
+//U256 is 2 bytes
     let text = std::fs::read_to_string("../evm.json").unwrap();
     println!("{text}");
     let data: Vec<Evmtest> = serde_json::from_str(&text).unwrap();
@@ -80,7 +87,7 @@ fn main() {
         let account_state = &test.state;
 
 
-        let result = evm(&code,tx_to, to_from, tx_origin, tx_gasprice,tx_value, tx_data, block_basefee,block_coinbase, block_timestamp, block_number, block_difficulty, block_gaslimit, block_chainid, account_state);
+        let result = evm(&code,tx_to, to_from, tx_origin, tx_gasprice,tx_value, tx_data, block_basefee,block_coinbase, block_timestamp, block_number, block_difficulty, block_gaslimit, block_chainid, account_state, &mut storage);
         //let result = evm(&code, &tx_to,&tx_from);
 
         let mut expected_stack: Vec<U256> = Vec::new();

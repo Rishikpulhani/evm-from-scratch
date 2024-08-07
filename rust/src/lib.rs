@@ -114,7 +114,10 @@ pub fn default_state() -> HashMap<String, StateAccountData>{
 }
 
 //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &Vec<u8>, _tx_from : &Vec<u8>) -> EvmResult
-pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>) -> EvmResult {
+
+
+
+pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult {
     let mut stack: Vec<U256> = Vec::new();
     let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
@@ -1020,7 +1023,42 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             };
            
         }
-        if opcode == 0x47{
+        if opcode == 0x47 {
+            pc +=1;
+            
+            match _account_state {
+                Some(value) => match value.get(_tx_to){
+                    Some(val) => {
+                        let result = &val.balance;
+                        let bal= U256::from_str_radix(result, 16).unwrap();
+                        helper::push_to_stack(&mut stack, bal);
+                    }
+                    None => (),
+                }
+                None => (),
+            }
+        }
+        if opcode == 0x55 {
+            //NOTE
+            //storage is never deleted wwith the txn hence we define it out of the txn while loop 
+            //for storage make an array of U256 type as each value is 256 byte 
+            //the size of the array is 2^256
+            //the evm does not do slot packing it is done by the solidity bytecode with the help of other opcodes 
+            //If you take our example above when we run SLOAD on slot 0 we’re going to get the full 32-byte value stored at that location.
+            //in sstore also it will overwrite the value at that place 
+            pc +=1;
+            let (slot, num) = helper::pop2(&mut stack);
+            storage.insert(slot,num);
+        }
+        if opcode == 0x54 {
+            pc +=1;
+            let slot = stack.remove(0);
+            match storage.get(&slot) {
+                Some(value) => helper::push_to_stack(&mut stack, *value),
+                None => helper::push_to_stack(&mut stack, U256::from(0)),
+            }
+        }
+        if opcode == 0xa0{
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
