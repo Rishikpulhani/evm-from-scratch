@@ -12,6 +12,7 @@ pub struct EvmResult {
     pub stack: Vec<U256>,
     pub success: bool,
     pub logs: Log,
+    pub ret: U256,
 }
 #[derive(Debug,Serialize, Deserialize)]
 pub struct LogTest {
@@ -151,6 +152,9 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
     let mut logs_stack: Vec<U256> = Vec::new();
     let mut _data = U256::from(0);
     let mut _address = String::new();
+    let mut return_val = U256::from(0);
+    let mut storage_changed_slot_list : Vec<U256> = Vec::new();
+    let mut strorage_changed_initial_value_list : Vec<U256> = Vec::new();
     let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
     let mut status: bool = true;
@@ -1096,6 +1100,11 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             //in sstore also it will overwrite the value at that place 
             pc +=1;
             let (slot, num) = helper::pop2(&mut stack);
+            storage_changed_slot_list.push(slot);
+            strorage_changed_initial_value_list.push(match storage.get(&slot){
+                Some(value) => *value,
+                None => U256::from(0),
+            });
             storage.insert(slot,num);
         }
         if opcode == 0x54 {
@@ -1117,6 +1126,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
             _address = String::from(_tx_to);
+            helper::memory_access(offset,size, &mut memory_array, &mut stack);
             let data_str = &memory_array[offset..offset+size].to_vec();
             
             _data = helper::bytes_to_u256_ref(data_str);
@@ -1128,6 +1138,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
             _address = String::from(_tx_to);
+            helper::memory_access(offset,size, &mut memory_array, &mut stack);
             let data_str = &memory_array[offset..offset+size].to_vec();
             _data = helper::bytes_to_u256_ref(data_str);
             let topic_number = (opcode - 160) as usize;
@@ -1136,10 +1147,36 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
                 let topic = stack.remove(0);
                 logs_stack.push(topic);
             }
-
+        }
+        if opcode == 0xf3 {
+            pc +=1;
+            let (_offset,_size) = helper::pop2(&mut stack);
+            let offset = _offset.low_u64() as usize;
+            let size = _size.low_u64() as usize;
+            helper::memory_access(offset,size, &mut memory_array, &mut stack);
+            let return_str = &memory_array[offset..offset+size].to_vec();
+            return_val = helper::bytes_to_u256_ref(return_str);
+        }
+        if opcode == 0xfd {
+            //this will stop the txn execution i.e. break the while loop 
+            //this will also revert all the state changes made to the storage 
+            let mut index = 0;
+            
+            for i in storage_changed_slot_list{
+                storage.insert(i,strorage_changed_initial_value_list[index]);
+                index +=1;
+            }
+            status = false;
+            let (_offset,_size) = helper::pop2(&mut stack);
+            let offset = _offset.low_u64() as usize;
+            let size = _size.low_u64() as usize;
+            helper::memory_access(offset,size, &mut memory_array, &mut stack);
+            let return_str = &memory_array[offset..offset+size].to_vec();
+            return_val = helper::bytes_to_u256_ref(return_str);
+            break;
 
         }
-        if opcode == 0xf3{
+        if opcode == 0xf1{
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
@@ -1169,5 +1206,6 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
         stack: stack,
         success: status,
         logs: logs_struct,
+        ret : return_val,
     };
 }

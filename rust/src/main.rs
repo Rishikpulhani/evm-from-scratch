@@ -49,8 +49,11 @@ struct Expect {
     logs : Option<Vec<LogTest>>,
     //made it a vector as in the serde match the [] brackets were creating a problem and considereing it as a mapping 
     success: bool,
-    // #[serde(rename = "return")]
-    // ret: Option<String>,
+    
+    #[serde(rename = "return")]
+    ret: Option<String>,
+    //This attribute changes the name of the field in the serialized or deserialized data, without changing the name of the field in your Rust struct.
+    //using option as this field might not be available everywhere
 }
 
 fn main() {
@@ -110,6 +113,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
         let mut actual_data = U256::from(0);
         let mut actual_address = String::new();
         let mut expected_data_u256 = U256::from(0);
+        let mut expected_return_u256 = U256::from(0);
         if let Some(ref log_stacks) = test.expect.logs {
             //this is a stack/vector of LogTest
             if log_stacks.len() > 0 {
@@ -128,9 +132,15 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
                 extension_data.push_str(&expected_data);
                 expected_data_u256 = U256::from_str_radix(&extension_data, 16).unwrap();
                 expected_address = log_stacks[0].address.clone();
+                
             }
             
         }
+        match &test.expect.ret {
+            Some(val) => expected_return_u256 = U256::from_str_radix(val, 16).unwrap(),
+            None => (),
+        }
+        
         let mut matching_address = result.logs.address == expected_address;
         let mut matching_data = result.logs.data == expected_data_u256;
         
@@ -158,12 +168,13 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
                 }
             }
         }
+        
         println!("{}",result.success);
         println!("{log_matching}");
         println!("{matching_address}");
         println!("{matching_data}");
         println!("{matching}");
-        matching = matching && result.success == test.expect.success && log_matching && matching_address && matching_data;
+        matching = matching && result.success == test.expect.success && log_matching && matching_address && matching_data && expected_return_u256 == result.ret;
         //let actual_log = test.expect.logs.as_ref();
         
         //not use unwrap as it consumes the value i.e. not borrowing 
@@ -172,6 +183,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
             println!("Instructions: \n{}\n", test.code.asm);
 
             println!("Expected success: {:?}", test.expect.success);
+            println!("Expected return: {:?}", test.expect.ret);
             println!("Expected stack: [");
             for v in expected_stack {
                 println!("  {:#X},", v);
@@ -188,6 +200,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
             println!("]\n");
 
             println!("Actual success: {:?}", result.success);
+            println!("Actual return: {:?}", result.ret);
             println!("Actual stack: [");
             for v in result.stack {
                 println!("  {:#X},", v);
