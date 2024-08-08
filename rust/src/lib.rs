@@ -7,9 +7,38 @@ mod helper;
 // info on U256 and its implementation
 //The U256 type is typically defined as a struct containing multiple smaller integer types (e.g., u64) to represent a 256-bit integer:pub struct U256([u64; 4]);
 // we can also preform bitwise multiplications, there are functions in rust which help us do it
+
 pub struct EvmResult {
     pub stack: Vec<U256>,
     pub success: bool,
+    pub logs: Log,
+}
+#[derive(Debug,Serialize, Deserialize)]
+pub struct LogTest {
+    #[serde(default = "default_log_str")]
+    pub address : String,
+    #[serde(default = "default_log_str")]
+    pub data : String,
+    #[serde(default = "default_log_vec")]
+    pub topics : Vec<String>,
+}
+pub fn default_stack() -> Option<Vec<String>>{
+    Some(Vec::new())
+}
+pub struct Log {
+    pub address : String,
+    pub data : U256,
+    pub topics : Vec<U256>,
+}
+//these default values for log will be used when the expect object in created in the main 
+pub fn default_log_str() -> String{
+    String::from("")
+}
+pub fn default_log_vec() -> Vec<String>{
+    Vec::new()
+}
+pub fn default_logs() -> Option<Vec<LogTest>> {
+    Some(Vec::new())
 }
 #[derive(Debug,Serialize, Deserialize)]
 pub struct Block {
@@ -64,17 +93,17 @@ pub struct Tx {
 }
 pub fn default_tx_data() -> Tx{
     Tx{
-        to : String::from("0x00".to_string()),
-        from : String::from("0x00".to_string()),
-        origin : String::from("0x00".to_string()),
-        gasprice : String::from("0x00".to_string()),
-        value : String::from("0x00".to_string()),
+        to : String::from("".to_string()),
+        from : String::from("".to_string()),
+        origin : String::from("".to_string()),
+        gasprice : String::from("".to_string()),
+        value : String::from("".to_string()),
         data : String::from("".to_string()),
     }
 }
 
 pub fn default_tx_data_internal_data() -> String{
-    String::from("0x00".to_string())
+    String::from("".to_string())
 }
 //Serde also handles nested structures. For example, the state field in Evmtest is a HashMap<String, State_Account_Data>, and Serde will recursively deserialize the state object in the JSON into this map.
 #[derive(Debug,Serialize, Deserialize)]
@@ -119,6 +148,9 @@ pub fn default_state() -> HashMap<String, StateAccountData>{
 
 pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult {
     let mut stack: Vec<U256> = Vec::new();
+    let mut logs_stack: Vec<U256> = Vec::new();
+    let mut _data = U256::from(0);
+    let mut _address = String::new();
     let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
     let mut status: bool = true;
@@ -135,7 +167,23 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
     println!("value of code is {:?}", code);
     //let tx_to = _tx_to;
     //let tx_from = _tx_from;
+    let mut valid_opcodes: Vec<u8> = (0..=255).collect();
 
+    // Define the ranges and individual numbers to remove
+    let to_remove = [
+        12..=15,
+        30..=31,
+        33..=47,
+        75..=79,
+        165..=240,
+        246..=249,
+        251..=252,
+    ];
+
+    // Remove the specified numbers
+    valid_opcodes.retain(|&x| {
+        !to_remove.iter().any(|range| range.contains(&x))
+    });
     while pc < code.len() {
         let opcode = code[pc]; //u8 type
         helper::print_type_of(&opcode);
@@ -1058,24 +1106,68 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
                 None => helper::push_to_stack(&mut stack, U256::from(0)),
             }
         }
-        if opcode == 0xa0{
+        let log_opcodes: [u8; 4] = (161..=164)
+            .collect::<Vec<u8>>()
+            .try_into()
+            .expect("Wrong length");
+        
+        if opcode == 0xa0 {
+            pc +=1;
+            let (_offset,_size) = helper::pop2(&mut stack);
+            let offset = _offset.low_u64() as usize;
+            let size = _size.low_u64() as usize;
+            _address = String::from(_tx_to);
+            let data_str = &memory_array[offset..offset+size].to_vec();
+            
+            _data = helper::bytes_to_u256_ref(data_str);
+            println!("{status}");
+        }
+        if log_opcodes.contains(&opcode){
+            pc +=1;
+            let (_offset,_size) = helper::pop2(&mut stack);
+            let offset = _offset.low_u64() as usize;
+            let size = _size.low_u64() as usize;
+            _address = String::from(_tx_to);
+            let data_str = &memory_array[offset..offset+size].to_vec();
+            _data = helper::bytes_to_u256_ref(data_str);
+            let topic_number = (opcode - 160) as usize;
+            
+            for i in 0..topic_number{
+                let topic = stack.remove(0);
+                logs_stack.push(topic);
+            }
+
+
+        }
+        if opcode == 0xf3{
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
 
-
+        
 
         //invalid opcode
-        if opcode > 0x9f {
+        if opcode == 0xfe {
             status = false;
+            break;
+        }
+        if !valid_opcodes.contains(&opcode) {
+            status = false;
+            println!("status switched to false as not a vaid opcode");
             break;
         }
     }
 
     // TODO: Implement me
-
+    let logs_struct = Log{
+        address: _address,
+        data : _data,
+        topics : logs_stack,
+    };
+    println!("status of success is : {status}");
     return EvmResult {
         stack: stack,
         success: status,
+        logs: logs_struct,
     };
 }

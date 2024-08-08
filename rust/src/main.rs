@@ -15,7 +15,7 @@
 // if we initialise a project in rust using cargo new projectname but then chnage the name of the project from outside without chnaging the name in the package section of cargo.toml then it will not cause  problem, here the cargo was initialsed using evm package name but then it was changed to rust
 //here evm is refering to ur package name only
 //when we create a new package here evm then the files lib.rs and main.rs are named actually after the package name, so to use some function of library crate we have to write this statement of use evm::evm, as evm is the package name so lib.rs name is also evm, the func name is also evm
-use evm::{evm, Block, default_block_data_internal_data, default_block_data, Tx, default_tx_data, default_tx_data_internal_data, default_state,default_state_data,Code,default_statecode,Statecode, StateAccountData};
+use evm::{evm, Block, default_block_data_internal_data, default_block_data, Tx, default_tx_data, default_tx_data_internal_data, default_state,default_state_data,Code,default_statecode,Statecode, StateAccountData, Log, default_log_str, default_log_vec,default_logs,LogTest,default_stack};
 use primitive_types::U256; //imported crate as dependency
 use serde::{Serialize, Deserialize}; //imported crate as dependency
 use std::collections::HashMap;
@@ -42,7 +42,12 @@ struct Evmtest {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Expect {
+    #[serde(default = "default_stack")]
     stack: Option<Vec<String>>,
+    
+    #[serde(default = "default_logs")]
+    logs : Option<Vec<LogTest>>,
+    //made it a vector as in the serde match the [] brackets were creating a problem and considereing it as a mapping 
     success: bool,
     // #[serde(rename = "return")]
     // ret: Option<String>,
@@ -57,7 +62,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
 //this is seperate for each contract so define this in the main.rs which interacts with the bytecode of the entire contract not only a transaction of that contract as in case of memory 
 //U256 is 2 bytes
     let text = std::fs::read_to_string("../evm.json").unwrap();
-    println!("{text}");
+    
     let data: Vec<Evmtest> = serde_json::from_str(&text).unwrap();
     //the serde json is smart enough to automatically put the given data in the form of a string in json format to the types specified by us 
     //so here when some alue is null we have to assign it to an option enum and then handle it 
@@ -88,16 +93,54 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
 
 
         let result = evm(&code,tx_to, to_from, tx_origin, tx_gasprice,tx_value, tx_data, block_basefee,block_coinbase, block_timestamp, block_number, block_difficulty, block_gaslimit, block_chainid, account_state, &mut storage);
-        //let result = evm(&code, &tx_to,&tx_from);
-
+        println!("{:?}",&test.expect);
+        
+        //testing 
+        //in testing everythinh is same for logs as in stack except where we are accessing test first 
+        //all this for 1 test only 
         let mut expected_stack: Vec<U256> = Vec::new();
+        let mut expected_log_stack: Vec<U256> = Vec::new();
         if let Some(ref stacks) = test.expect.stack {
             for value in stacks {
                 expected_stack.push(U256::from_str_radix(value, 16).unwrap());
             }
         }
-
+        let mut expected_data = String::new();
+        let mut expected_address = String::new();
+        let mut actual_data = U256::from(0);
+        let mut actual_address = String::new();
+        let mut expected_data_u256 = U256::from(0);
+        if let Some(ref log_stacks) = test.expect.logs {
+            //this is a stack/vector of LogTest
+            if log_stacks.len() > 0 {
+                let index = log_stacks[0].topics.len();
+                if index > 0 {
+                    for i in 0..index {
+                        //as logs is a option which contains a vector due to the sytax in evm.json 
+                        let value = &log_stacks[0].topics[i];
+                        expected_log_stack.push(U256::from_str_radix(value, 16).unwrap());
+                    }
+                }
+                
+                //expected_data_str = hex::decode(log_stacks[0].data.clone()).unwrap();
+                expected_data = log_stacks[0].data.clone();
+                let mut extension_data = String::from("0x");
+                extension_data.push_str(&expected_data);
+                expected_data_u256 = U256::from_str_radix(&extension_data, 16).unwrap();
+                expected_address = log_stacks[0].address.clone();
+            }
+            
+        }
+        let mut matching_address = result.logs.address == expected_address;
+        let mut matching_data = result.logs.data == expected_data_u256;
+        
+        //actual_data = result.logs.data.clone();
+        //actual_address = result.logs.address.clone();
+        
+        
         let mut matching = result.stack.len() == expected_stack.len();
+        let mut log_matching = result.logs.topics.len() == expected_log_stack.len() ;//result object is not an option type 
+        //LogTest is option type 
         if matching {
             for i in 0..result.stack.len() {
                 if result.stack[i] != expected_stack[i] {
@@ -106,8 +149,24 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
                 }
             }
         }
-
-        matching = matching && result.success == test.expect.success;
+        if log_matching {
+            for i in 0..result.logs.topics.len() {
+                if result.logs.topics[i] != expected_log_stack[i] {
+                    //here both are of type u256
+                    matching = false;
+                    break;
+                }
+            }
+        }
+        println!("{}",result.success);
+        println!("{log_matching}");
+        println!("{matching_address}");
+        println!("{matching_data}");
+        println!("{matching}");
+        matching = matching && result.success == test.expect.success && log_matching && matching_address && matching_data;
+        //let actual_log = test.expect.logs.as_ref();
+        
+        //not use unwrap as it consumes the value i.e. not borrowing 
 
         if !matching {
             println!("Instructions: \n{}\n", test.code.asm);
@@ -118,12 +177,31 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
                 println!("  {:#X},", v);
             }
             println!("]\n");
+            println!("Expected log stack: [");
+            for v in expected_log_stack {
+                println!("  {:#X},", v);
+            }
+            println!("]\n");
+            println!("Expected address: {:?}", expected_address);
+            println!("]\n");
+            println!("Expected data: {:?}", expected_data);
+            println!("]\n");
 
             println!("Actual success: {:?}", result.success);
             println!("Actual stack: [");
             for v in result.stack {
                 println!("  {:#X},", v);
             } //to print each element in hexadecimal format
+            println!("]\n");
+            
+            println!("Actual log stack: [");
+            for v in result.logs.topics {
+                println!("  {:#X},", v);
+            } //to print each element in hexadecimal format
+            println!("]\n");
+            println!("actual address: {:?}", result.logs.address);
+            println!("]\n");
+            println!("actual data: {:?}", result.logs.data);
             println!("]\n");
 
             println!("\nHint: {}\n", test.hint);
