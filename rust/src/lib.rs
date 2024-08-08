@@ -12,7 +12,8 @@ pub struct EvmResult {
     pub stack: Vec<U256>,
     pub success: bool,
     pub logs: Log,
-    pub ret: U256,
+    //pub ret: U256,
+    pub ret: Vec<u8>,
 }
 #[derive(Debug,Serialize, Deserialize)]
 pub struct LogTest {
@@ -152,7 +153,19 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
     let mut logs_stack: Vec<U256> = Vec::new();
     let mut _data = U256::from(0);
     let mut _address = String::new();
-    let mut return_val = U256::from(0);
+    //let mut return_val = U256::from(0);
+    let mut return_val : Vec<u8> = Vec::new();
+    let mut call_result : EvmResult = EvmResult{
+        stack : Vec::new(),
+        success : true,
+        logs : Log{
+            address : String::new(),
+            data : U256::from(0),            
+            topics : Vec::new(),
+        },
+        //ret : U256::from(0),
+        ret : Vec::new(),
+    };
     let mut storage_changed_slot_list : Vec<U256> = Vec::new();
     let mut strorage_changed_initial_value_list : Vec<U256> = Vec::new();
     let mut pc: usize = 0;
@@ -165,6 +178,8 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
     let mut memory_array: Vec<u8> = vec![0; 0];
     let mut mem_size = 0;
     let mem_ptr: usize = 0;
+    let accountaddress = String::from(_tx_to);
+
 
     let code = _code.as_ref();
     
@@ -1154,8 +1169,12 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
             helper::memory_access(offset,size, &mut memory_array, &mut stack);
-            let return_str = &memory_array[offset..offset+size].to_vec();
-            return_val = helper::bytes_to_u256_ref(return_str);
+            //let return_str = &memory_array[offset..offset+size].to_vec();
+            //return_val = helper::bytes_to_u256_ref(return_str);
+            let return_str = &memory_array[offset..offset+size];
+            println!("the return_str is {:?}",return_str);
+            return_val = return_str.to_vec();
+            println!("the return_val is {:?}",return_val);
         }
         if opcode == 0xfd {
             //this will stop the txn execution i.e. break the while loop 
@@ -1171,12 +1190,93 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
             helper::memory_access(offset,size, &mut memory_array, &mut stack);
-            let return_str = &memory_array[offset..offset+size].to_vec();
-            return_val = helper::bytes_to_u256_ref(return_str);
+            //let return_str = &memory_array[offset..offset+size].to_vec();
+            //return_val = helper::bytes_to_u256_ref(return_str);
+            let return_str = &memory_array[offset..offset+size];
+            return_val = return_str.to_vec();
             break;
 
         }
-        if opcode == 0xf1{
+        if opcode == 0xf1 {
+            pc +=1;
+            let (gas, addr,value,_argsoffset,_argssize, _retoffset,_retsize) = helper::pop7(&mut stack);
+            let argsoffset = _argsoffset.low_u64() as usize;
+            let argssize = _argssize.low_u64() as usize;
+            let retoffset = _retoffset.low_u64() as usize;
+            let retsize = _retsize.low_u64() as usize;
+            let address = helper::get_addr(addr);
+            let defulatstateacc = StateAccountData {
+                balance: String::from(""),
+                code: Statecode {
+                    asm: Some(String::from("")),
+                    bin: String::from(""),
+                },
+            };
+            println!("the address is: {address}");
+            let callobj = match _account_state {
+                Some(ref value) => value.get(&address).unwrap_or(&defulatstateacc),
+                None => &defulatstateacc,
+            };
+            
+            let callcode : Vec<u8> = hex::decode(&callobj.code.bin).unwrap();
+            println!("the value if callcode is {:?}",callcode);
+            
+            //let callobj = match _account_state{
+              //  Some(value) => match value.get(&address) {
+                //    Some(val) => val,
+                  //  None => &StateAccountData{
+                    //    balance : String::from(""),
+                      //  code : Statecode{
+                        //    asm : Some(String::from("")),
+                          //  bin : String::from(""),
+                        //},
+                    //},
+                //},
+                //None => &StateAccountData{
+                  //  balance : String::from(""),
+                    //code : Statecode{
+                      //  asm : Some(String::from("")),
+                        //bin : String::from(""),
+                    //},
+                
+            //},
+        //};
+            //let callcode = &callobj.code.bin;
+            
+            let val = helper::get_addr(value);
+            helper::memory_access(argsoffset,argssize,&mut memory_array, &mut stack);
+            println!("the memory is {:?}",memory_array);
+            let call_calldata = &memory_array[argsoffset..argsoffset+argssize];
+            println!("the calldata_array_slice is {:?}",call_calldata);
+            let call_calldata_vec = call_calldata.to_vec();
+            println!("the calldata_vec is {:?}",call_calldata_vec);
+            let calldata = helper::bytes_to_str(call_calldata_vec);
+            println!("the calldata is {:?}",calldata);
+            
+            call_result = evm(callcode,&address, _tx_to, _tx_from, _tx_gasprice,&val, &calldata, _block_basefee,_block_coinbase, _block_timestamp, _block_number, _block_difficulty, _block_gaslimit, _block_chainid, _account_state, storage);
+            //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
+            helper::memory_access(retoffset,retsize ,&mut memory_array, &mut stack);
+            //let mut byte_form = [0u8; 32];
+            //call_result.ret.to_big_endian(&mut byte_form);
+            
+            println!("the returned value is : {:?}",call_result.ret);
+            let mut index = retoffset; 
+            for i in 0..retsize{
+                
+                memory_array[index] = call_result.ret[i];
+                index += 1;
+                //here write to specific bytes as mload will load all the 32 bytes together 
+                //if call the caller in the sub context of the other contract then it will be main contract tx_to and the other contract tx_from
+            }
+            if call_result.success {
+                helper::push_to_stack(&mut stack, U256::from(1));
+            }
+            else {
+                helper::push_to_stack(&mut stack, U256::from(0));
+            }
+            
+        }
+        if opcode == 0x3d{
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
@@ -1202,6 +1302,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
         topics : logs_stack,
     };
     println!("status of success is : {status}");
+    println!("status of return_val is : {:?}",return_val);
     return EvmResult {
         stack: stack,
         success: status,

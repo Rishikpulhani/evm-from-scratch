@@ -111,6 +111,16 @@ pub fn pop4(stack: &mut Vec<U256>) -> (U256, U256, U256, U256) {
     let num4 = stack.remove(0);
     (num1, num2, num3, num4)
 }
+pub fn pop7(stack: &mut Vec<U256>) -> (U256, U256, U256, U256, U256, U256, U256) {
+    let num1 = stack.remove(0);
+    let num2 = stack.remove(0);
+    let num3 = stack.remove(0);
+    let num4 = stack.remove(0);
+    let num5 = stack.remove(0);
+    let num6 = stack.remove(0);
+    let num7 = stack.remove(0);
+    (num1, num2, num3, num4, num5, num6, num7)
+}
 pub fn push_to_stack(stack: &mut Vec<U256>, element: U256) {
     stack.insert(0, element);
 }
@@ -280,4 +290,15 @@ pub fn get_addr(addr : U256) -> String{
     address.push_str(trimmed);//address of the contract 
     println!("{address}");
     address
+}
+pub fn bytes_to_str(bytes : Vec<u8>) -> String{
+    let mut data_string = String::new();
+    //for i in 0..bytes.len(){
+      //  let val = bytes[i];
+        //data_string = format!("{}{}",data_string,val);
+        //println!("{data_string}");
+    //}
+    data_string = hex::encode(bytes);
+    println!("data string is {data_string}");
+    data_string
 }

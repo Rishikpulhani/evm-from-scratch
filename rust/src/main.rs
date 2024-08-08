@@ -113,7 +113,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
         let mut actual_data = U256::from(0);
         let mut actual_address = String::new();
         let mut expected_data_u256 = U256::from(0);
-        let mut expected_return_u256 = U256::from(0);
+        let mut expected_return_vec = Vec::new();
         if let Some(ref log_stacks) = test.expect.logs {
             //this is a stack/vector of LogTest
             if log_stacks.len() > 0 {
@@ -137,7 +137,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
             
         }
         match &test.expect.ret {
-            Some(val) => expected_return_u256 = U256::from_str_radix(val, 16).unwrap(),
+            Some(val) => expected_return_vec = hex::decode(val).unwrap(),
             None => (),
         }
         
@@ -149,6 +149,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
         
         
         let mut matching = result.stack.len() == expected_stack.len();
+        let mut matching_return = result.ret.len() == expected_return_vec.len();
         let mut log_matching = result.logs.topics.len() == expected_log_stack.len() ;//result object is not an option type 
         //LogTest is option type 
         if matching {
@@ -159,11 +160,19 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
                 }
             }
         }
+        if matching_return {
+            for i in 0..result.ret.len() {
+                if result.ret[i] != expected_return_vec[i] {
+                    matching_return = false;
+                    break;
+                }
+            }
+        }
         if log_matching {
             for i in 0..result.logs.topics.len() {
                 if result.logs.topics[i] != expected_log_stack[i] {
                     //here both are of type u256
-                    matching = false;
+                    log_matching = false;
                     break;
                 }
             }
@@ -174,16 +183,18 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
         println!("{matching_address}");
         println!("{matching_data}");
         println!("{matching}");
-        matching = matching && result.success == test.expect.success && log_matching && matching_address && matching_data && expected_return_u256 == result.ret;
+        println!("{matching_return}");
+        println!("{:?}",result.ret);
+        println!("{:?}",expected_return_vec);
+        matching = matching && result.success == test.expect.success && log_matching && matching_address && matching_data && matching_return;//expected_return_vec == result.ret;
         //let actual_log = test.expect.logs.as_ref();
         
-        //not use unwrap as it consumes the value i.e. not borrowing 
-
+        //not use unwrap as it consumes the value i.e. not borrowing
         if !matching {
             println!("Instructions: \n{}\n", test.code.asm);
 
             println!("Expected success: {:?}", test.expect.success);
-            println!("Expected return: {:?}", test.expect.ret);
+            println!("Expected return: {:?}", expected_return_vec);
             println!("Expected stack: [");
             for v in expected_stack {
                 println!("  {:#X},", v);
