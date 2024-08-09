@@ -207,7 +207,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
             println!("]\n");
             println!("Expected address: {:?}", expected_address);
             println!("]\n");
-            println!("Expected data: {:?}", expected_data);
+            println!("Expected data: {:?}", expected_data_u256);
             println!("]\n");
 
             println!("Actual success: {:?}", result.success);

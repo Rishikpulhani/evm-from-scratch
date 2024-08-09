@@ -1171,9 +1171,10 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             helper::memory_access(offset,size, &mut memory_array, &mut stack);
             //let return_str = &memory_array[offset..offset+size].to_vec();
             //return_val = helper::bytes_to_u256_ref(return_str);
-            let return_str = &memory_array[offset..offset+size];
-            println!("the return_str is {:?}",return_str);
-            return_val = return_str.to_vec();
+            //let return_str = &memory_array[offset..offset+size];
+            //println!("the return_str is {:?}",return_str);
+            return_val = memory_array[offset..offset+size].to_vec();
+            //if we use & then we are boorrowing a reference to the resulting vector but we want to own the vector 
             println!("the return_val is {:?}",return_val);
         }
         if opcode == 0xfd {
@@ -1192,8 +1193,9 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             helper::memory_access(offset,size, &mut memory_array, &mut stack);
             //let return_str = &memory_array[offset..offset+size].to_vec();
             //return_val = helper::bytes_to_u256_ref(return_str);
-            let return_str = &memory_array[offset..offset+size];
-            return_val = return_str.to_vec();
+            //let return_str = &memory_array[offset..offset+size];
+            return_val = memory_array[offset..offset+size].to_vec();
+
             break;
 
         }
@@ -1276,7 +1278,32 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             }
             
         }
-        if opcode == 0x3d{
+        if opcode == 0x3d {
+            pc +=1;
+            let size = call_result.ret.len();
+            println!("the size of return_val is {size}");
+            println!("the return_val inside the opcode is {:?}",return_val);
+            helper::push_to_stack(&mut stack, U256::from(size));
+            //this will be done for the most recent sub context execution 
+            
+        }
+        if opcode == 0x3e {
+            pc +=1;
+            let (_destoffset, _offset, _size) = helper::pop3(&mut stack);
+            let destoffset = _destoffset.low_u64() as usize;
+            let offset = _offset.low_u64() as usize;
+            let size = _size.low_u64() as usize;
+            helper::memory_access(destoffset,size,&mut memory_array, &mut stack);
+            let mut mem_index = destoffset;
+            let mut ret_byte_index = offset;
+            for i in 0..size{
+                memory_array[mem_index] = call_result.ret[ret_byte_index];
+                mem_index +=1;
+                ret_byte_index +=1;
+            }
+        }
+        
+        if opcode == 0xf4{
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }
