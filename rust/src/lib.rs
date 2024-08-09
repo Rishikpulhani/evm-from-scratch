@@ -115,6 +115,11 @@ pub struct StateAccountData{
     #[serde(default = "default_statecode")]
     pub code : Statecode,
     //To handle a null value in a JSON object using the serde_json crate, you need to ensure that the corresponding field in your Rust struct is of type Option<T>. This tells serde_json that the field can be either a value of type T or null.
+    //#[serde(default = "default_storage")]
+    //pub store : Option<HashMap<U256,U256>>,
+}
+pub fn default_storage() -> Option<HashMap<U256,U256>> {
+    Some(HashMap::new())
 }
 pub fn default_state_data() -> String{
     String::from("0x00".to_string())
@@ -149,6 +154,7 @@ pub fn default_state() -> HashMap<String, StateAccountData>{
 
 
 pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult {
+    //here the storage in the StateAccountData is of some other contract address and the storage passed is of the the current contract 
     let mut stack: Vec<U256> = Vec::new();
     let mut logs_stack: Vec<U256> = Vec::new();
     let mut _data = U256::from(0);
@@ -1199,6 +1205,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             break;
 
         }
+        //CALL
         if opcode == 0xf1 {
             pc +=1;
             let (gas, addr,value,_argsoffset,_argssize, _retoffset,_retsize) = helper::pop7(&mut stack);
@@ -1213,6 +1220,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
                     asm: Some(String::from("")),
                     bin: String::from(""),
                 },
+                //store : Some(HashMap::new()),
             };
             println!("the address is: {address}");
             let callobj = match _account_state {
@@ -1232,6 +1240,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
                         //    asm : Some(String::from("")),
                           //  bin : String::from(""),
                         //},
+                        //store : Some(Hashmap::new()),
                     //},
                 //},
                 //None => &StateAccountData{
@@ -1240,6 +1249,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
                       //  asm : Some(String::from("")),
                         //bin : String::from(""),
                     //},
+                    //store : Some(Hashmap::new()),
                 
             //},
         //};
@@ -1254,8 +1264,8 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             println!("the calldata_vec is {:?}",call_calldata_vec);
             let calldata = helper::bytes_to_str(call_calldata_vec);
             println!("the calldata is {:?}",calldata);
-            
-            call_result = evm(callcode,&address, _tx_to, _tx_from, _tx_gasprice,&val, &calldata, _block_basefee,_block_coinbase, _block_timestamp, _block_number, _block_difficulty, _block_gaslimit, _block_chainid, _account_state, storage);
+            let mut other_contract_storage : HashMap<U256,U256> = HashMap::new();//this value is not correct but i have not currently implemented the feature where it can take the storage of the other contract directly
+            call_result = evm(callcode,&address, _tx_to, _tx_from, _tx_gasprice,&val, &calldata, _block_basefee,_block_coinbase, _block_timestamp, _block_number, _block_difficulty, _block_gaslimit, _block_chainid, _account_state, &mut other_contract_storage);
             //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
             helper::memory_access(retoffset,retsize ,&mut memory_array, &mut stack);
             //let mut byte_form = [0u8; 32];
@@ -1302,8 +1312,90 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
                 ret_byte_index +=1;
             }
         }
-        
-        if opcode == 0xf4{
+        //delegatecall
+        if opcode == 0xf4 {
+            pc +=1;
+            let (gas, addr,_argsoffset,_argssize, _retoffset,_retsize) = helper::pop6(&mut stack);
+            // here the storage of the main contract will be used 
+            let argsoffset = _argsoffset.low_u64() as usize;
+            let argssize = _argssize.low_u64() as usize;
+            let retoffset = _retoffset.low_u64() as usize;
+            let retsize = _retsize.low_u64() as usize;
+            let address = helper::get_addr(addr);
+            let defulatstateacc = StateAccountData {
+                balance: String::from(""),
+                code: Statecode {
+                    asm: Some(String::from("")),
+                    bin: String::from(""),
+                },
+                //store : Some(HashMap::new()),
+            };
+            println!("the address is: {address}");
+            let callobj = match _account_state {
+                Some(ref value) => value.get(&address).unwrap_or(&defulatstateacc),
+                None => &defulatstateacc,
+            };
+            
+            let callcode : Vec<u8> = hex::decode(&callobj.code.bin).unwrap();
+            println!("the value if callcode is {:?}",callcode);
+            
+            //let callobj = match _account_state{
+              //  Some(value) => match value.get(&address) {
+                //    Some(val) => val,
+                  //  None => &StateAccountData{
+                    //    balance : String::from(""),
+                      //  code : Statecode{
+                        //    asm : Some(String::from("")),
+                          //  bin : String::from(""),
+                        //},
+                        //store : Some(Hashmap::new()),
+                    //},
+                //},
+                //None => &StateAccountData{
+                  //  balance : String::from(""),
+                    //code : Statecode{
+                      //  asm : Some(String::from("")),
+                        //bin : String::from(""),
+                    //},
+                    //store : Some(Hashmap::new()),
+                
+            //},
+        //};
+            //let callcode = &callobj.code.bin;
+            
+            //let val = helper::get_addr(value);
+            helper::memory_access(argsoffset,argssize,&mut memory_array, &mut stack);
+            println!("the memory is {:?}",memory_array);
+            let call_calldata = &memory_array[argsoffset..argsoffset+argssize];
+            println!("the calldata_array_slice is {:?}",call_calldata);
+            let call_calldata_vec = call_calldata.to_vec();
+            println!("the calldata_vec is {:?}",call_calldata_vec);
+            let calldata = helper::bytes_to_str(call_calldata_vec);
+            println!("the calldata is {:?}",calldata);
+            //tx_to is the msg.sender 
+            call_result = evm(callcode,_tx_to, _tx_from, _tx_origin, _tx_gasprice,_tx_value, &calldata, _block_basefee,_block_coinbase, _block_timestamp, _block_number, _block_difficulty, _block_gaslimit, _block_chainid, _account_state, storage);
+            //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
+            helper::memory_access(retoffset,retsize ,&mut memory_array, &mut stack);
+            //let mut byte_form = [0u8; 32];
+            //call_result.ret.to_big_endian(&mut byte_form);
+            
+            println!("the returned value is : {:?}",call_result.ret);
+            let mut index = retoffset; 
+            for i in 0..retsize{
+                
+                memory_array[index] = call_result.ret[i];
+                index += 1;
+                //here write to specific bytes as mload will load all the 32 bytes together 
+                //if call the caller in the sub context of the other contract then it will be main contract tx_to and the other contract tx_from
+            }
+            if call_result.success {
+                helper::push_to_stack(&mut stack, U256::from(1));
+            }
+            else {
+                helper::push_to_stack(&mut stack, U256::from(0));
+            }
+        }
+        if opcode == 0xfa{
             pc = pc + code.len();
             helper::push_to_stack(&mut stack, U256::from(0));
         }

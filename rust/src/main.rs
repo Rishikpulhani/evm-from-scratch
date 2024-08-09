@@ -96,6 +96,7 @@ let mut storage : HashMap<U256,U256> = HashMap::new();
 
 
         let result = evm(&code,tx_to, to_from, tx_origin, tx_gasprice,tx_value, tx_data, block_basefee,block_coinbase, block_timestamp, block_number, block_difficulty, block_gaslimit, block_chainid, account_state, &mut storage);
+        //this step signifies a transaction not a contract
         println!("{:?}",&test.expect);
         
         //testing 
