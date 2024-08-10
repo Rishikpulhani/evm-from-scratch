@@ -1,7 +1,7 @@
 use primitive_types::U256;
-use tiny_keccak::{Hasher, Keccak};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tiny_keccak::{Hasher, Keccak};
 mod helper;
 
 // info on U256 and its implementation
@@ -15,165 +15,184 @@ pub struct EvmResult {
     //pub ret: U256,
     pub ret: Vec<u8>,
 }
-#[derive(Debug,Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LogTest {
     #[serde(default = "default_log_str")]
-    pub address : String,
+    pub address: String,
     #[serde(default = "default_log_str")]
-    pub data : String,
+    pub data: String,
     #[serde(default = "default_log_vec")]
-    pub topics : Vec<String>,
+    pub topics: Vec<String>,
 }
-pub fn default_stack() -> Option<Vec<String>>{
+pub fn default_stack() -> Option<Vec<String>> {
     Some(Vec::new())
 }
 pub struct Log {
-    pub address : String,
-    pub data : U256,
-    pub topics : Vec<U256>,
+    pub address: String,
+    pub data: U256,
+    pub topics: Vec<U256>,
 }
-//these default values for log will be used when the expect object in created in the main 
-pub fn default_log_str() -> String{
+//these default values for log will be used when the expect object in created in the main
+pub fn default_log_str() -> String {
     String::from("")
 }
-pub fn default_log_vec() -> Vec<String>{
+pub fn default_log_vec() -> Vec<String> {
     Vec::new()
 }
 pub fn default_logs() -> Option<Vec<LogTest>> {
     Some(Vec::new())
 }
-#[derive(Debug,Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Block {
-    #[serde(default = "default_block_data_internal_data")]//this attribute is used to assign default values to fileds of a struct if their value is not given 
+    #[serde(default = "default_block_data_internal_data")]
+    //this attribute is used to assign default values to fileds of a struct if their value is not given
     pub basefee: String,
-    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified 
+    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified
     #[serde(default = "default_block_data_internal_data")]
-    pub coinbase : String,
+    pub coinbase: String,
     #[serde(default = "default_block_data_internal_data")]
-    pub timestamp : String,
+    pub timestamp: String,
     #[serde(default = "default_block_data_internal_data")]
-    pub number : String,
+    pub number: String,
     #[serde(default = "default_block_data_internal_data")]
-    pub difficulty : String,
+    pub difficulty: String,
     #[serde(default = "default_block_data_internal_data")]
-    pub gaslimit : String,
+    pub gaslimit: String,
     #[serde(default = "default_block_data_internal_data")]
-    pub chainid : String,
+    pub chainid: String,
 }
-pub fn default_block_data() -> Block{
-    Block{
-        basefee : String::from("0x00".to_string()),
-        coinbase : String::from("0x00".to_string()),
-        timestamp : String::from("0x00".to_string()),
-        number : String::from("0x00".to_string()),
-        difficulty : String::from("0x00".to_string()),
-        gaslimit : String::from("0x00".to_string()),
-        chainid : String::from("0x00".to_string()),
+pub fn default_block_data() -> Block {
+    Block {
+        basefee: String::from("0x00".to_string()),
+        coinbase: String::from("0x00".to_string()),
+        timestamp: String::from("0x00".to_string()),
+        number: String::from("0x00".to_string()),
+        difficulty: String::from("0x00".to_string()),
+        gaslimit: String::from("0x00".to_string()),
+        chainid: String::from("0x00".to_string()),
     }
 }
-pub fn default_block_data_internal_data() -> String{
+pub fn default_block_data_internal_data() -> String {
     String::from("0x00".to_string())
 }
-pub fn default_tx_data_internal_data_data() -> String{
-    String::from("".to_string())//here give an empty string as the function we are using in the opcode calldatasize is hex decode and in case of the data field the input is a hex string and not a hex number stored as a string for the json file 
+pub fn default_tx_data_internal_data_data() -> String {
+    String::from("".to_string()) //here give an empty string as the function we are using in the opcode calldatasize is hex decode and in case of the data field the input is a hex string and not a hex number stored as a string for the json file
 }
-#[derive(Debug,Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Tx {
-    #[serde(default = "default_tx_data_internal_data")]//this attribute is used to assign default values to fileds of a struct if their value is not given 
+    #[serde(default = "default_tx_data_internal_data")]
+    //this attribute is used to assign default values to fileds of a struct if their value is not given
     pub to: String,
-    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified 
+    //as serde will also go and compare the parameters inside and see if their value is present and if not then assign a default value if specified
     #[serde(default = "default_tx_data_internal_data")]
     pub from: String,
     #[serde(default = "default_tx_data_internal_data")]
-    pub origin : String,
+    pub origin: String,
     #[serde(default = "default_tx_data_internal_data")]
-    pub gasprice : String,
+    pub gasprice: String,
     #[serde(default = "default_tx_data_internal_data")]
-    pub value : String,
+    pub value: String,
     #[serde(default = "default_tx_data_internal_data_data")]
-    pub data : String,
+    pub data: String,
 }
-pub fn default_tx_data() -> Tx{
-    Tx{
-        to : String::from("".to_string()),
-        from : String::from("".to_string()),
-        origin : String::from("".to_string()),
-        gasprice : String::from("".to_string()),
-        value : String::from("".to_string()),
-        data : String::from("".to_string()),
+pub fn default_tx_data() -> Tx {
+    Tx {
+        to: String::from("".to_string()),
+        from: String::from("".to_string()),
+        origin: String::from("".to_string()),
+        gasprice: String::from("".to_string()),
+        value: String::from("".to_string()),
+        data: String::from("".to_string()),
     }
 }
 
-pub fn default_tx_data_internal_data() -> String{
+pub fn default_tx_data_internal_data() -> String {
     String::from("".to_string())
 }
 //Serde also handles nested structures. For example, the state field in Evmtest is a HashMap<String, State_Account_Data>, and Serde will recursively deserialize the state object in the JSON into this map.
-#[derive(Debug,Serialize, Deserialize)]
-pub struct StateAccountData{
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StateAccountData {
     #[serde(default = "default_state_data")]
-    pub balance : String,//using hashmap as the key value i.e the address of the account will be given in the push statement 
+    pub balance: String, //using hashmap as the key value i.e the address of the account will be given in the push statement
     #[serde(default = "default_statecode")]
-    pub code : Statecode,
+    pub code: Statecode,
     //To handle a null value in a JSON object using the serde_json crate, you need to ensure that the corresponding field in your Rust struct is of type Option<T>. This tells serde_json that the field can be either a value of type T or null.
     //#[serde(default = "default_storage")]
     //pub store : Option<HashMap<U256,U256>>,
 }
-pub fn default_storage() -> Option<HashMap<U256,U256>> {
+pub fn default_storage() -> Option<HashMap<U256, U256>> {
     Some(HashMap::new())
 }
-pub fn default_state_data() -> String{
+pub fn default_state_data() -> String {
     String::from("0x00".to_string())
 }
-#[derive(Debug,Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Code {
     pub asm: String,
     pub bin: String,
 }
-#[derive(Debug,Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Statecode {
     pub asm: Option<String>,
     pub bin: String,
 }
 
-pub fn default_statecode_internal() -> String{
-  String::from("".to_string())
+pub fn default_statecode_internal() -> String {
+    String::from("".to_string())
 }
-pub fn default_statecode() -> Statecode{
-    Statecode{
-        asm : Some(String::from("".to_string())),
-        bin : String::from("".to_string()),
+pub fn default_statecode() -> Statecode {
+    Statecode {
+        asm: Some(String::from("".to_string())),
+        bin: String::from("".to_string()),
     }
 }
 
-pub fn default_state() -> HashMap<String, StateAccountData>{
+pub fn default_state() -> HashMap<String, StateAccountData> {
     HashMap::new()
 }
 
 //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &Vec<u8>, _tx_from : &Vec<u8>) -> EvmResult
 
-
-
-pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult {
-    //here the storage in the StateAccountData is of some other contract address and the storage passed is of the the current contract 
+pub fn evm(
+    _code: impl AsRef<[u8]>,
+    _tx_to: &String,
+    _tx_from: &String,
+    _tx_origin: &String,
+    _tx_gasprice: &String,
+    _tx_value: &String,
+    _tx_data: &String,
+    _block_basefee: &String,
+    _block_coinbase: &String,
+    _block_timestamp: &String,
+    _block_number: &String,
+    _block_difficulty: &String,
+    _block_gaslimit: &String,
+    _block_chainid: &String,
+    _account_state: &mut HashMap<String, StateAccountData>,
+    storage: &mut HashMap<U256, U256>,
+    staticflag: bool,
+    //nonce : &mut U256
+) -> EvmResult {
+    //here the storage in the StateAccountData is of some other contract address and the storage passed is of the the current contract
     let mut stack: Vec<U256> = Vec::new();
     let mut logs_stack: Vec<U256> = Vec::new();
     let mut _data = U256::from(0);
     let mut _address = String::new();
     //let mut return_val = U256::from(0);
-    let mut return_val : Vec<u8> = Vec::new();
-    let mut call_result : EvmResult = EvmResult{
-        stack : Vec::new(),
-        success : true,
-        logs : Log{
-            address : String::new(),
-            data : U256::from(0),            
-            topics : Vec::new(),
+    let mut return_val: Vec<u8> = Vec::new();
+    let mut call_result: EvmResult = EvmResult {
+        stack: Vec::new(),
+        success: true,
+        logs: Log {
+            address: String::new(),
+            data: U256::from(0),
+            topics: Vec::new(),
         },
         //ret : U256::from(0),
-        ret : Vec::new(),
+        ret: Vec::new(),
     };
-    let mut storage_changed_slot_list : Vec<U256> = Vec::new();
-    let mut strorage_changed_initial_value_list : Vec<U256> = Vec::new();
+    let mut storage_changed_slot_list: Vec<U256> = Vec::new();
+    let mut storage_changed_initial_value_list: Vec<U256> = Vec::new();
     let mut pc: usize = 0;
     //let mut stack1 :Vec<String> = Vec::new();
     let mut status: bool = true;
@@ -186,9 +205,8 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
     let mem_ptr: usize = 0;
     let accountaddress = String::from(_tx_to);
 
-
     let code = _code.as_ref();
-    
+
     println!("value of code is {:?}", code);
     //let tx_to = _tx_to;
     //let tx_from = _tx_from;
@@ -200,15 +218,13 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
         30..=31,
         33..=47,
         75..=79,
-        165..=240,
+        165..=239,
         246..=249,
         251..=252,
     ];
 
     // Remove the specified numbers
-    valid_opcodes.retain(|&x| {
-        !to_remove.iter().any(|range| range.contains(&x))
-    });
+    valid_opcodes.retain(|&x| !to_remove.iter().any(|range| range.contains(&x)));
     while pc < code.len() {
         let opcode = code[pc]; //u8 type
         helper::print_type_of(&opcode);
@@ -795,7 +811,7 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             //the size of memory must change even if we just try to access an index
             let num1 = stack.remove(0).low_u64() as usize;
             helper::memory_access(num1, 32, &mut memory_array, &mut stack);
-            
+
             let ans = &memory_array[num1..num1 + 32];
             let mut ans_vec = ans.to_vec();
             let result = helper::bytes_to_u256(ans_vec);
@@ -825,14 +841,13 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             pc += 1;
             let result = memory_array.len();
             helper::push_to_stack(&mut stack, U256::from(result));
-            
         }
         if opcode == 0x20 {
             pc += 1;
             let (num1, num2) = helper::pop2(&mut stack);
             //num1 is the position of reading or the index and num2 is the offset
-            let v1 = num1.low_u64() as usize; 
-            let v2 = num2.low_u64() as usize; 
+            let v1 = num1.low_u64() as usize;
+            let v2 = num2.low_u64() as usize;
             helper::memory_access(v1, v2, &mut memory_array, &mut stack);
             let mut hasher = Keccak::v256();
             let ans = &memory_array[v1..v1 + v2];
@@ -841,114 +856,110 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             hasher.finalize(&mut output);
             let result = helper::bytes_to_u256(output.to_vec());
             helper::push_to_stack(&mut stack, result);
-            //the hash func takes in a bytes string reference or slice of bytes 
+            //the hash func takes in a bytes string reference or slice of bytes
             //this opcode accesses the memory so we have to take care of memory expansion
-
         }
         if opcode == 0x30 {
-            pc +=1;
+            pc += 1;
             let to = _tx_to;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x33 {
-            pc +=1;
+            pc += 1;
             let to = _tx_from;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x32 {
-            pc +=1;
+            pc += 1;
             let to = _tx_origin;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x3a {
-            pc +=1;
+            pc += 1;
             let to = _tx_gasprice;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x48 {
-            pc +=1;
+            pc += 1;
             let to = _block_basefee;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x41 {
-            pc +=1;
+            pc += 1;
             let to = _block_coinbase;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x42 {
-            pc +=1;
+            pc += 1;
             let to = _block_timestamp;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x43 {
-            pc +=1;
+            pc += 1;
             let to = _block_number;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x44 {
-            pc +=1;
+            pc += 1;
             let to = _block_difficulty;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x45 {
-            pc +=1;
+            pc += 1;
             let to = _block_gaslimit;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x46 {
-            pc +=1;
+            pc += 1;
             let to = _block_chainid;
-            helper::hex_str_to_u256_push(&to,&mut stack);
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x40 {
             pc += 1;
             let num1 = stack.remove(0);
-            let mut input  = [0u8; 32];
+            let mut input = [0u8; 32];
             num1.to_big_endian(&mut input);
             let input_str = &input[0..32];
             let trimmed_hex = _block_number.trim_start_matches("0x");
-            // Remove the "0x" prefix if it's there for this function 
+            // Remove the "0x" prefix if it's there for this function
             let number_u256 = U256::from_str_radix(trimmed_hex, 16).unwrap();
-            if (number_u256 > U256::from(256) && num1 < number_u256 && num1 > number_u256 - U256::from(256)) || (number_u256 < U256::from(256) && num1 < number_u256){    
+            if (number_u256 > U256::from(256)
+                && num1 < number_u256
+                && num1 > number_u256 - U256::from(256))
+                || (number_u256 < U256::from(256) && num1 < number_u256)
+            {
                 let mut hasher = Keccak::v256();
                 hasher.update(input_str);
                 let mut output = [0u8; 32];
                 hasher.finalize(&mut output);
                 let result = helper::bytes_to_u256(output.to_vec());
                 helper::push_to_stack(&mut stack, result);
-            }
-            else {
+            } else {
                 helper::push_to_stack(&mut stack, U256::from(0));
             }
-            
         }
         if opcode == 0x31 {
-            pc +=1;
+            pc += 1;
             let num1 = stack.remove(0);
             let address = helper::get_addr(num1);
-            let result = match _account_state{
-                Some(value) => match value.get(&address) {
-                    Some(val) => &val.balance,
-                    None => "0x0",
-                },
+            let result = match _account_state.get(&address) {
+                Some(val) => &val.balance,
                 None => "0x0",
             };
             //let result = match _account_state.get(&extension) {
-              //  Some(value) => &value.balance,
-               // None => "0x0",//if the hash map does not have the value for this key  
+            //  Some(value) => &value.balance,
+            // None => "0x0",//if the hash map does not have the value for this key
             //};
-            
+
             let ans = U256::from_str_radix(result, 16).unwrap();
             println!("{ans}");
 
             helper::push_to_stack(&mut stack, ans);
-
         }
         if opcode == 0x34 {
-            pc +=1;
+            pc += 1;
             let to = _tx_value;
-            helper::hex_str_to_u256_push(&to,&mut stack);
-            
+            helper::hex_str_to_u256_push(&to, &mut stack);
         }
         if opcode == 0x35 {
             pc += 1;
@@ -956,180 +967,181 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             let offset = num1.low_u64() as usize;
             //let trimmed_data = _tx_data.trim_start_matches('0');
             println!("{_tx_data}");
-            let mut bytes_form : Vec<u8> = hex::decode(_tx_data).unwrap();
-            //not use the as_bytes method on string as that will convert each character of the tsring to its ascii value but 1 bytes is of 2characters so use the hex::decode() function when trying to convert a hexadecimal string to bytes 
+            let mut bytes_form: Vec<u8> = hex::decode(_tx_data).unwrap();
+            //not use the as_bytes method on string as that will convert each character of the tsring to its ascii value but 1 bytes is of 2characters so use the hex::decode() function when trying to convert a hexadecimal string to bytes
 
-            if offset + 32 >= bytes_form.len(){
-                let req_0 = offset+32-bytes_form.len();
-                for i in 0..req_0{
+            if offset + 32 >= bytes_form.len() {
+                let req_0 = offset + 32 - bytes_form.len();
+                for i in 0..req_0 {
                     bytes_form.push(00);
                 }
             }
-            println!("{:?}",bytes_form);
-            let resultant = &bytes_form[offset..offset+32].to_vec();
-            println!("{:?}",resultant);
+            println!("{:?}", bytes_form);
+            let resultant = &bytes_form[offset..offset + 32].to_vec();
+            println!("{:?}", resultant);
             let result = helper::bytes_to_u256(resultant.to_vec());
             helper::push_to_stack(&mut stack, result);
         }
         if opcode == 0x36 {
-            pc +=1;
-            let mut bytes_form : Vec<u8> = hex::decode(_tx_data).unwrap();
+            pc += 1;
+            let mut bytes_form: Vec<u8> = hex::decode(_tx_data).unwrap();
             let size = bytes_form.len();
             println!("{size}");
             helper::push_to_stack(&mut stack, U256::from(size));
         }
         if opcode == 0x37 {
-            pc +=1;
-            let mut bytes_form : Vec<u8> = hex::decode(_tx_data).unwrap();
-            let (_destoffset , _offset, _size) = helper::pop3(&mut stack);
+            pc += 1;
+            let mut bytes_form: Vec<u8> = hex::decode(_tx_data).unwrap();
+            let (_destoffset, _offset, _size) = helper::pop3(&mut stack);
             let mut destoffset = _destoffset.low_u64() as usize;
             let mut offset = _offset.low_u64() as usize;
             let mut size = _size.low_u64() as usize;
             helper::memory_access(destoffset, 32, &mut memory_array, &mut stack);
-            if offset + 32 >= bytes_form.len(){
-                let req_0 = offset+32-bytes_form.len();
-                for i in 0..req_0{
+            if offset + 32 >= bytes_form.len() {
+                let req_0 = offset + 32 - bytes_form.len();
+                for i in 0..req_0 {
                     bytes_form.push(00);
                 }
             }
-            let resultant = &bytes_form[offset..offset+size ].to_vec();
+            let resultant = &bytes_form[offset..offset + size].to_vec();
             for i in 0..size {
                 memory_array[destoffset] = resultant[i];
-                destoffset +=1;
+                destoffset += 1;
             }
         }
         if opcode == 0x38 {
-            pc +=1;
+            pc += 1;
             helper::push_to_stack(&mut stack, U256::from(code.len()));
         }
         if opcode == 0x39 {
-            pc +=1;
-            let (_destoffset , _offset, _size) = helper::pop3(&mut stack);
+            pc += 1;
+            let (_destoffset, _offset, _size) = helper::pop3(&mut stack);
             let mut destoffset = _destoffset.low_u64() as usize;
             let mut offset = _offset.low_u64() as usize;
             let mut size = _size.low_u64() as usize;
             let by = code.clone();
             let mut bytes_form = by.to_vec();
             helper::memory_access(destoffset, 32, &mut memory_array, &mut stack);
-            if offset + 32 >= bytes_form.len(){
-                let req_0 = offset+32-bytes_form.len();
-                for i in 0..req_0{
+            if offset + 32 >= bytes_form.len() {
+                let req_0 = offset + 32 - bytes_form.len();
+                for i in 0..req_0 {
                     bytes_form.push(00);
                 }
             }
-            let resultant = &bytes_form[offset..offset+size].to_vec();
+            let resultant = &bytes_form[offset..offset + size].to_vec();
             for i in 0..size {
                 memory_array[destoffset] = resultant[i];
-                destoffset +=1;
+                destoffset += 1;
             }
         }
         if opcode == 0x3b {
-            pc +=1;
+            pc += 1;
             let num1 = stack.remove(0);
             let address = helper::get_addr(num1);
-            let result = match _account_state{
-                Some(value) => match value.get(&address) {
-                    Some(val) => &val.code.bin,
-                    None => "0x0",
-                },
+            let result = match _account_state.get(&address) {
+                Some(val) => &val.code.bin,
                 None => "",
             };
             //let result = match _account_state.get(&extension) {
-              //  Some(value) => &value.balance,
-               // None => "0x0",//if the hash map does not have the value for this key  
+            //  Some(value) => &value.balance,
+            // None => "0x0",//if the hash map does not have the value for this key
             //};
-            let ans = hex::decode(result).unwrap();
+            println!("the result at 1049 is {result}");
+            let ans = hex::decode(&result).unwrap();
+            //odd lenght error is when the hexadecimal string has an odd number of characters
             //let ans = U256::from_str_radix(result, 16).unwrap();
-            println!("{:?}",ans);
+            println!("{:?}", ans);
 
             helper::push_to_stack(&mut stack, U256::from(ans.len()));
-
         }
         if opcode == 0x3c {
-            pc +=1;
+            pc += 1;
             let (addr, _destoffset, _offset, _size) = helper::pop4(&mut stack);
             let address = helper::get_addr(addr);
             let mut destoffset = _destoffset.low_u64() as usize;
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
             helper::memory_access(destoffset, size, &mut memory_array, &mut stack);
-            let result = match _account_state{
-                Some(value) => match value.get(&address) {
-                    Some(val) => &val.code.bin,
-                    None => "0x0",
-                },
-                None => "",
+            let result = match _account_state.get(&address) {
+                Some(val) => &val.code.bin,
+                None => "0x0",
             };
+            println!("heloo th result is {result}");
             let mut ans = hex::decode(result).unwrap();
-            println!("{:?}",ans);
-            if offset + size > ans.len(){
-                for i in 0..(offset + size - ans.len()){
+            println!("{:?}", ans);
+            if offset + size > ans.len() {
+                for i in 0..(offset + size - ans.len()) {
                     ans.push(00);
                 }
             }
-            for i in offset..offset+size{
+            println!("{:?}", ans);
+            println!("heloo th destoffset is {destoffset}");
+            println!("heloo th offset is {offset}");
+            println!("heloo th size is {size}");
+            for i in offset..offset + size {
                 memory_array[destoffset] = ans[i];
                 destoffset += 1;
             }
-
         }
         if opcode == 0x3f {
-            pc +=1;
-            
+            pc += 1;
+
             let num1 = stack.remove(0);
             let address = helper::get_addr(num1);
-            match _account_state{
-                Some(value) => match value.get(&address) {
-                    Some(val) => {
-                        let result = String::from(&val.code.bin);
-                        let mut hasher = Keccak::v256();
-                        //let ans = &memory_array[v1..v1 + v2];
-                        hasher.update(&hex::decode(result).unwrap());
-                        let mut output = [0u8; 32];
-                        hasher.finalize(&mut output);
-                        let ans = helper::bytes_to_u256(output.to_vec());
-                        helper::push_to_stack(&mut stack, ans);
-                    },
-                    None => helper::push_to_stack(&mut stack, U256::from(0)),
-                },
-                None => helper::push_to_stack(&mut stack, U256::from(0)),//if want to do noting then return this 
+            match _account_state.get(&address) {
+                Some(val) => {
+                    let result = String::from(&val.code.bin);
+                    let mut hasher = Keccak::v256();
+                    //let ans = &memory_array[v1..v1 + v2];
+                    hasher.update(&hex::decode(result).unwrap());
+                    let mut output = [0u8; 32];
+                    hasher.finalize(&mut output);
+                    let ans = helper::bytes_to_u256(output.to_vec());
+                    helper::push_to_stack(&mut stack, ans);
+                }
+                None => helper::push_to_stack(&mut stack, U256::from(0)),
             };
-           
         }
         if opcode == 0x47 {
-            pc +=1;
-            
-            match _account_state {
-                Some(value) => match value.get(_tx_to){
-                    Some(val) => {
-                        let result = &val.balance;
-                        let bal= U256::from_str_radix(result, 16).unwrap();
-                        helper::push_to_stack(&mut stack, bal);
-                    }
-                    None => (),
+            pc += 1;
+
+            match _account_state.get(_tx_to) {
+                Some(val) => {
+                    let result = &val.balance;
+                    let bal = U256::from_str_radix(result, 16).unwrap();
+                    helper::push_to_stack(&mut stack, bal);
                 }
                 None => (),
-            }
+            };
         }
         if opcode == 0x55 {
             //NOTE
-            //storage is never deleted wwith the txn hence we define it out of the txn while loop 
-            //for storage make an array of U256 type as each value is 256 byte 
+            //storage is never deleted wwith the txn hence we define it out of the txn while loop
+            //for storage make an array of U256 type as each value is 256 byte
             //the size of the array is 2^256
-            //the evm does not do slot packing it is done by the solidity bytecode with the help of other opcodes 
+            //the evm does not do slot packing it is done by the solidity bytecode with the help of other opcodes
             //If you take our example above when we run SLOAD on slot 0 we’re going to get the full 32-byte value stored at that location.
-            //in sstore also it will overwrite the value at that place 
-            pc +=1;
-            let (slot, num) = helper::pop2(&mut stack);
-            storage_changed_slot_list.push(slot);
-            strorage_changed_initial_value_list.push(match storage.get(&slot){
-                Some(value) => *value,
-                None => U256::from(0),
-            });
-            storage.insert(slot,num);
+            //in sstore also it will overwrite the value at that place
+            pc += 1;
+            if staticflag {
+                helper::revert_changes(
+                    storage,
+                    &storage_changed_slot_list,
+                    &storage_changed_initial_value_list,
+                );
+                status = false;
+            } else {
+                let (slot, num) = helper::pop2(&mut stack);
+                storage_changed_slot_list.push(slot);
+                storage_changed_initial_value_list.push(match storage.get(&slot) {
+                    Some(value) => *value,
+                    None => U256::from(0),
+                });
+                storage.insert(slot, num);
+            }
         }
         if opcode == 0x54 {
-            pc +=1;
+            pc += 1;
             let slot = stack.remove(0);
             match storage.get(&slot) {
                 Some(value) => helper::push_to_stack(&mut stack, *value),
@@ -1140,183 +1152,230 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
             .collect::<Vec<u8>>()
             .try_into()
             .expect("Wrong length");
-        
+
         if opcode == 0xa0 {
-            pc +=1;
-            let (_offset,_size) = helper::pop2(&mut stack);
-            let offset = _offset.low_u64() as usize;
-            let size = _size.low_u64() as usize;
-            _address = String::from(_tx_to);
-            helper::memory_access(offset,size, &mut memory_array, &mut stack);
-            let data_str = &memory_array[offset..offset+size].to_vec();
-            
-            _data = helper::bytes_to_u256_ref(data_str);
-            println!("{status}");
+            pc += 1;
+            if staticflag {
+                helper::revert_changes(
+                    storage,
+                    &storage_changed_slot_list,
+                    &storage_changed_initial_value_list,
+                );
+                status = false;
+            } else {
+                let (_offset, _size) = helper::pop2(&mut stack);
+                let offset = _offset.low_u64() as usize;
+                let size = _size.low_u64() as usize;
+                _address = String::from(_tx_to);
+                helper::memory_access(offset, size, &mut memory_array, &mut stack);
+                let data_str = &memory_array[offset..offset + size].to_vec();
+
+                _data = helper::bytes_to_u256_ref(data_str);
+                println!("{status}");
+            }
         }
-        if log_opcodes.contains(&opcode){
-            pc +=1;
-            let (_offset,_size) = helper::pop2(&mut stack);
-            let offset = _offset.low_u64() as usize;
-            let size = _size.low_u64() as usize;
-            _address = String::from(_tx_to);
-            helper::memory_access(offset,size, &mut memory_array, &mut stack);
-            let data_str = &memory_array[offset..offset+size].to_vec();
-            _data = helper::bytes_to_u256_ref(data_str);
-            let topic_number = (opcode - 160) as usize;
-            
-            for i in 0..topic_number{
-                let topic = stack.remove(0);
-                logs_stack.push(topic);
+        if log_opcodes.contains(&opcode) {
+            pc += 1;
+            if staticflag {
+                helper::revert_changes(
+                    storage,
+                    &storage_changed_slot_list,
+                    &storage_changed_initial_value_list,
+                );
+                status = false;
+            } else {
+                let (_offset, _size) = helper::pop2(&mut stack);
+                let offset = _offset.low_u64() as usize;
+                let size = _size.low_u64() as usize;
+                _address = String::from(_tx_to);
+                helper::memory_access(offset, size, &mut memory_array, &mut stack);
+                let data_str = &memory_array[offset..offset + size].to_vec();
+                _data = helper::bytes_to_u256_ref(data_str);
+                let topic_number = (opcode - 160) as usize;
+
+                for i in 0..topic_number {
+                    let topic = stack.remove(0);
+                    logs_stack.push(topic);
+                }
             }
         }
         if opcode == 0xf3 {
-            pc +=1;
-            let (_offset,_size) = helper::pop2(&mut stack);
+            pc += 1;
+            let (_offset, _size) = helper::pop2(&mut stack);
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
-            helper::memory_access(offset,size, &mut memory_array, &mut stack);
+            helper::memory_access(offset, size, &mut memory_array, &mut stack);
             //let return_str = &memory_array[offset..offset+size].to_vec();
             //return_val = helper::bytes_to_u256_ref(return_str);
             //let return_str = &memory_array[offset..offset+size];
             //println!("the return_str is {:?}",return_str);
-            return_val = memory_array[offset..offset+size].to_vec();
-            //if we use & then we are boorrowing a reference to the resulting vector but we want to own the vector 
-            println!("the return_val is {:?}",return_val);
+            return_val = memory_array[offset..offset + size].to_vec();
+            //if we use & then we are boorrowing a reference to the resulting vector but we want to own the vector
+            println!("the return_val is {:?}", return_val);
         }
         if opcode == 0xfd {
-            //this will stop the txn execution i.e. break the while loop 
-            //this will also revert all the state changes made to the storage 
-            let mut index = 0;
-            
-            for i in storage_changed_slot_list{
-                storage.insert(i,strorage_changed_initial_value_list[index]);
-                index +=1;
-            }
+            //this will stop the txn execution i.e. break the while loop
+            //this will also revert all the state changes made to the storage
+
+            helper::revert_changes(
+                storage,
+                &storage_changed_slot_list,
+                &storage_changed_initial_value_list,
+            );
             status = false;
-            let (_offset,_size) = helper::pop2(&mut stack);
+            let (_offset, _size) = helper::pop2(&mut stack);
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
-            helper::memory_access(offset,size, &mut memory_array, &mut stack);
+            helper::memory_access(offset, size, &mut memory_array, &mut stack);
             //let return_str = &memory_array[offset..offset+size].to_vec();
             //return_val = helper::bytes_to_u256_ref(return_str);
             //let return_str = &memory_array[offset..offset+size];
-            return_val = memory_array[offset..offset+size].to_vec();
+            return_val = memory_array[offset..offset + size].to_vec();
 
             break;
-
         }
         //CALL
         if opcode == 0xf1 {
-            pc +=1;
-            let (gas, addr,value,_argsoffset,_argssize, _retoffset,_retsize) = helper::pop7(&mut stack);
-            let argsoffset = _argsoffset.low_u64() as usize;
-            let argssize = _argssize.low_u64() as usize;
-            let retoffset = _retoffset.low_u64() as usize;
-            let retsize = _retsize.low_u64() as usize;
-            let address = helper::get_addr(addr);
-            let defulatstateacc = StateAccountData {
-                balance: String::from(""),
-                code: Statecode {
-                    asm: Some(String::from("")),
-                    bin: String::from(""),
-                },
-                //store : Some(HashMap::new()),
-            };
-            println!("the address is: {address}");
-            let callobj = match _account_state {
-                Some(ref value) => value.get(&address).unwrap_or(&defulatstateacc),
-                None => &defulatstateacc,
-            };
-            
-            let callcode : Vec<u8> = hex::decode(&callobj.code.bin).unwrap();
-            println!("the value if callcode is {:?}",callcode);
-            
-            //let callobj = match _account_state{
-              //  Some(value) => match value.get(&address) {
+            pc += 1;
+            if staticflag {
+                helper::revert_changes(
+                    storage,
+                    &storage_changed_slot_list,
+                    &storage_changed_initial_value_list,
+                );
+                status = false;
+            } else {
+                let (gas, addr, value, _argsoffset, _argssize, _retoffset, _retsize) =
+                    helper::pop7(&mut stack);
+                let argsoffset = _argsoffset.low_u64() as usize;
+                let argssize = _argssize.low_u64() as usize;
+                let retoffset = _retoffset.low_u64() as usize;
+                let retsize = _retsize.low_u64() as usize;
+                let address = helper::get_addr(addr);
+                let defulatstateacc = StateAccountData {
+                    balance: String::from(""),
+                    code: Statecode {
+                        asm: Some(String::from("")),
+                        bin: String::from(""),
+                    },
+                    //store : Some(HashMap::new()),
+                };
+                println!("the address is: {address}");
+                //let callobj = match _account_state {
+                //  Some(ref value) => value.get(&address).unwrap_or(&defulatstateacc),
+                //  None => &defulatstateacc,
+                //};
+                let callobj = match _account_state.get(&address) {
+                    Some(val) => val,
+                    None => &defulatstateacc,
+                };
+
+                let callcode: Vec<u8> = hex::decode(&callobj.code.bin).unwrap();
+                println!("the value if callcode is {:?}", callcode);
+
+                //let callobj = match _account_state{
+                //  Some(value) => match value.get(&address) {
                 //    Some(val) => val,
-                  //  None => &StateAccountData{
-                    //    balance : String::from(""),
-                      //  code : Statecode{
-                        //    asm : Some(String::from("")),
-                          //  bin : String::from(""),
-                        //},
-                        //store : Some(Hashmap::new()),
-                    //},
+                //  None => &StateAccountData{
+                //    balance : String::from(""),
+                //  code : Statecode{
+                //    asm : Some(String::from("")),
+                //  bin : String::from(""),
+                //},
+                //store : Some(Hashmap::new()),
+                //},
                 //},
                 //None => &StateAccountData{
-                  //  balance : String::from(""),
-                    //code : Statecode{
-                      //  asm : Some(String::from("")),
-                        //bin : String::from(""),
-                    //},
-                    //store : Some(Hashmap::new()),
-                
-            //},
-        //};
-            //let callcode = &callobj.code.bin;
-            
-            let val = helper::get_addr(value);
-            helper::memory_access(argsoffset,argssize,&mut memory_array, &mut stack);
-            println!("the memory is {:?}",memory_array);
-            let call_calldata = &memory_array[argsoffset..argsoffset+argssize];
-            println!("the calldata_array_slice is {:?}",call_calldata);
-            let call_calldata_vec = call_calldata.to_vec();
-            println!("the calldata_vec is {:?}",call_calldata_vec);
-            let calldata = helper::bytes_to_str(call_calldata_vec);
-            println!("the calldata is {:?}",calldata);
-            let mut other_contract_storage : HashMap<U256,U256> = HashMap::new();//this value is not correct but i have not currently implemented the feature where it can take the storage of the other contract directly
-            call_result = evm(callcode,&address, _tx_to, _tx_from, _tx_gasprice,&val, &calldata, _block_basefee,_block_coinbase, _block_timestamp, _block_number, _block_difficulty, _block_gaslimit, _block_chainid, _account_state, &mut other_contract_storage);
-            //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
-            helper::memory_access(retoffset,retsize ,&mut memory_array, &mut stack);
-            //let mut byte_form = [0u8; 32];
-            //call_result.ret.to_big_endian(&mut byte_form);
-            
-            println!("the returned value is : {:?}",call_result.ret);
-            let mut index = retoffset; 
-            for i in 0..retsize{
-                
-                memory_array[index] = call_result.ret[i];
-                index += 1;
-                //here write to specific bytes as mload will load all the 32 bytes together 
-                //if call the caller in the sub context of the other contract then it will be main contract tx_to and the other contract tx_from
+                //  balance : String::from(""),
+                //code : Statecode{
+                //  asm : Some(String::from("")),
+                //bin : String::from(""),
+                //},
+                //store : Some(Hashmap::new()),
+
+                //},
+                //};
+                //let callcode = &callobj.code.bin;
+
+                let val = helper::get_addr(value);
+                helper::memory_access(argsoffset, argssize, &mut memory_array, &mut stack);
+                println!("the memory is {:?}", memory_array);
+                let call_calldata = &memory_array[argsoffset..argsoffset + argssize];
+                println!("the calldata_array_slice is {:?}", call_calldata);
+                let call_calldata_vec = call_calldata.to_vec();
+                println!("the calldata_vec is {:?}", call_calldata_vec);
+                let calldata = helper::bytes_to_str(call_calldata_vec);
+                println!("the calldata is {:?}", calldata);
+                let mut other_contract_storage: HashMap<U256, U256> = HashMap::new(); //this value is not correct but i have not currently implemented the feature where it can take the storage of the other contract directly
+                call_result = evm(
+                    callcode,
+                    &address,
+                    _tx_to,
+                    _tx_from,
+                    _tx_gasprice,
+                    &val,
+                    &calldata,
+                    _block_basefee,
+                    _block_coinbase,
+                    _block_timestamp,
+                    _block_number,
+                    _block_difficulty,
+                    _block_gaslimit,
+                    _block_chainid,
+                    _account_state,
+                    &mut other_contract_storage,
+                    false,
+                    //U256::from(0)
+                );
+                //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
+                helper::memory_access(retoffset, retsize, &mut memory_array, &mut stack);
+                //let mut byte_form = [0u8; 32];
+                //call_result.ret.to_big_endian(&mut byte_form);
+
+                println!("the returned value is : {:?}", call_result.ret);
+                let mut index = retoffset;
+                for i in 0..retsize {
+                    memory_array[index] = call_result.ret[i];
+                    index += 1;
+                    //here write to specific bytes as mload will load all the 32 bytes together
+                    //if call the caller in the sub context of the other contract then it will be main contract tx_to and the other contract tx_from
+                }
+                if call_result.success {
+                    helper::push_to_stack(&mut stack, U256::from(1));
+                } else {
+                    helper::push_to_stack(&mut stack, U256::from(0));
+                }
             }
-            if call_result.success {
-                helper::push_to_stack(&mut stack, U256::from(1));
-            }
-            else {
-                helper::push_to_stack(&mut stack, U256::from(0));
-            }
-            
         }
         if opcode == 0x3d {
-            pc +=1;
+            pc += 1;
             let size = call_result.ret.len();
             println!("the size of return_val is {size}");
-            println!("the return_val inside the opcode is {:?}",return_val);
+            println!("the return_val inside the opcode is {:?}", return_val);
             helper::push_to_stack(&mut stack, U256::from(size));
-            //this will be done for the most recent sub context execution 
-            
+            //this will be done for the most recent sub context execution
         }
         if opcode == 0x3e {
-            pc +=1;
+            pc += 1;
             let (_destoffset, _offset, _size) = helper::pop3(&mut stack);
             let destoffset = _destoffset.low_u64() as usize;
             let offset = _offset.low_u64() as usize;
             let size = _size.low_u64() as usize;
-            helper::memory_access(destoffset,size,&mut memory_array, &mut stack);
+            helper::memory_access(destoffset, size, &mut memory_array, &mut stack);
             let mut mem_index = destoffset;
             let mut ret_byte_index = offset;
-            for i in 0..size{
+            for i in 0..size {
                 memory_array[mem_index] = call_result.ret[ret_byte_index];
-                mem_index +=1;
-                ret_byte_index +=1;
+                mem_index += 1;
+                ret_byte_index += 1;
             }
         }
         //delegatecall
         if opcode == 0xf4 {
-            pc +=1;
-            let (gas, addr,_argsoffset,_argssize, _retoffset,_retsize) = helper::pop6(&mut stack);
-            // here the storage of the main contract will be used 
+            pc += 1;
+            let (gas, addr, _argsoffset, _argssize, _retoffset, _retsize) =
+                helper::pop6(&mut stack);
+            // here the storage of the main contract will be used
             let argsoffset = _argsoffset.low_u64() as usize;
             let argssize = _argssize.low_u64() as usize;
             let retoffset = _retoffset.low_u64() as usize;
@@ -1331,76 +1390,304 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
                 //store : Some(HashMap::new()),
             };
             println!("the address is: {address}");
-            let callobj = match _account_state {
-                Some(ref value) => value.get(&address).unwrap_or(&defulatstateacc),
+            let callobj = match _account_state.get(&address) {
+                Some(val) => val,
                 None => &defulatstateacc,
             };
-            
-            let callcode : Vec<u8> = hex::decode(&callobj.code.bin).unwrap();
-            println!("the value if callcode is {:?}",callcode);
-            
+
+            let callcode: Vec<u8> = hex::decode(&callobj.code.bin).unwrap();
+            println!("the value if callcode is {:?}", callcode);
+
             //let callobj = match _account_state{
-              //  Some(value) => match value.get(&address) {
-                //    Some(val) => val,
-                  //  None => &StateAccountData{
-                    //    balance : String::from(""),
-                      //  code : Statecode{
-                        //    asm : Some(String::from("")),
-                          //  bin : String::from(""),
-                        //},
-                        //store : Some(Hashmap::new()),
-                    //},
-                //},
-                //None => &StateAccountData{
-                  //  balance : String::from(""),
-                    //code : Statecode{
-                      //  asm : Some(String::from("")),
-                        //bin : String::from(""),
-                    //},
-                    //store : Some(Hashmap::new()),
-                
+            //  Some(value) => match value.get(&address) {
+            //    Some(val) => val,
+            //  None => &StateAccountData{
+            //    balance : String::from(""),
+            //  code : Statecode{
+            //    asm : Some(String::from("")),
+            //  bin : String::from(""),
             //},
-        //};
+            //store : Some(Hashmap::new()),
+            //},
+            //},
+            //None => &StateAccountData{
+            //  balance : String::from(""),
+            //code : Statecode{
+            //  asm : Some(String::from("")),
+            //bin : String::from(""),
+            //},
+            //store : Some(Hashmap::new()),
+
+            //},
+            //};
             //let callcode = &callobj.code.bin;
-            
+
             //let val = helper::get_addr(value);
-            helper::memory_access(argsoffset,argssize,&mut memory_array, &mut stack);
-            println!("the memory is {:?}",memory_array);
-            let call_calldata = &memory_array[argsoffset..argsoffset+argssize];
-            println!("the calldata_array_slice is {:?}",call_calldata);
+            helper::memory_access(argsoffset, argssize, &mut memory_array, &mut stack);
+            println!("the memory is {:?}", memory_array);
+            let call_calldata = &memory_array[argsoffset..argsoffset + argssize];
+            println!("the calldata_array_slice is {:?}", call_calldata);
             let call_calldata_vec = call_calldata.to_vec();
-            println!("the calldata_vec is {:?}",call_calldata_vec);
+            println!("the calldata_vec is {:?}", call_calldata_vec);
             let calldata = helper::bytes_to_str(call_calldata_vec);
-            println!("the calldata is {:?}",calldata);
-            //tx_to is the msg.sender 
-            call_result = evm(callcode,_tx_to, _tx_from, _tx_origin, _tx_gasprice,_tx_value, &calldata, _block_basefee,_block_coinbase, _block_timestamp, _block_number, _block_difficulty, _block_gaslimit, _block_chainid, _account_state, storage);
+            println!("the calldata is {:?}", calldata);
+            //tx_to is the msg.sender
+            call_result = evm(
+                callcode,
+                _tx_to,
+                _tx_from,
+                _tx_origin,
+                _tx_gasprice,
+                _tx_value,
+                &calldata,
+                _block_basefee,
+                _block_coinbase,
+                _block_timestamp,
+                _block_number,
+                _block_difficulty,
+                _block_gaslimit,
+                _block_chainid,
+                _account_state,
+                storage,
+                false,
+                //U256::from(0)
+            );
             //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
-            helper::memory_access(retoffset,retsize ,&mut memory_array, &mut stack);
+            helper::memory_access(retoffset, retsize, &mut memory_array, &mut stack);
             //let mut byte_form = [0u8; 32];
             //call_result.ret.to_big_endian(&mut byte_form);
-            
-            println!("the returned value is : {:?}",call_result.ret);
-            let mut index = retoffset; 
-            for i in 0..retsize{
-                
+
+            println!("the returned value is : {:?}", call_result.ret);
+            let mut index = retoffset;
+            for i in 0..retsize {
                 memory_array[index] = call_result.ret[i];
                 index += 1;
-                //here write to specific bytes as mload will load all the 32 bytes together 
+                //here write to specific bytes as mload will load all the 32 bytes together
                 //if call the caller in the sub context of the other contract then it will be main contract tx_to and the other contract tx_from
             }
             if call_result.success {
                 helper::push_to_stack(&mut stack, U256::from(1));
-            }
-            else {
+            } else {
                 helper::push_to_stack(&mut stack, U256::from(0));
             }
         }
-        if opcode == 0xfa{
-            pc = pc + code.len();
-            helper::push_to_stack(&mut stack, U256::from(0));
-        }
+        if opcode == 0xfa {
+            //Read-Only Mode: The STATICCALL opcode enforces a read-only mode for the duration of the call. This is typically used to query the state of another contract without making any changes.
+            //State Modifications: If the code being executed attempts to make any state changes (such as writing to storage or transferring ether), the entire transaction will revert.
+            pc += 1;
+            let (gas, addr, _argsoffset, _argssize, _retoffset, _retsize) =
+                helper::pop6(&mut stack);
+            let argsoffset = _argsoffset.low_u64() as usize;
+            let argssize = _argssize.low_u64() as usize;
+            let retoffset = _retoffset.low_u64() as usize;
+            let retsize = _retsize.low_u64() as usize;
+            let address = helper::get_addr(addr);
+            let defulatstateacc = StateAccountData {
+                balance: String::from(""),
+                code: Statecode {
+                    asm: Some(String::from("")),
+                    bin: String::from(""),
+                },
+                //store : Some(HashMap::new()),
+            };
+            println!("the address is: {address}");
+            let callobj = match _account_state.get(&address) {
+                Some(val) => val,
+                None => &defulatstateacc,
+            };
 
-        
+            let callcode: Vec<u8> = hex::decode(&callobj.code.bin).unwrap();
+            println!("the value if callcode is {:?}", callcode);
+
+            let val = helper::get_addr(U256::from(0));
+            helper::memory_access(argsoffset, argssize, &mut memory_array, &mut stack);
+            println!("the memory is {:?}", memory_array);
+            let call_calldata = &memory_array[argsoffset..argsoffset + argssize];
+            println!("the calldata_array_slice is {:?}", call_calldata);
+            let call_calldata_vec = call_calldata.to_vec();
+            println!("the calldata_vec is {:?}", call_calldata_vec);
+            let calldata = helper::bytes_to_str(call_calldata_vec);
+            println!("the calldata is {:?}", calldata);
+            let mut other_contract_storage: HashMap<U256, U256> = HashMap::new(); //this value is not correct but i have not currently implemented the feature where it can take the storage of the other contract directly
+            call_result = evm(
+                callcode,
+                &address,
+                _tx_to,
+                _tx_from,
+                _tx_gasprice,
+                &val,
+                &calldata,
+                _block_basefee,
+                _block_coinbase,
+                _block_timestamp,
+                _block_number,
+                _block_difficulty,
+                _block_gaslimit,
+                _block_chainid,
+                _account_state,
+                &mut other_contract_storage,
+                true,
+                //U256::from(0)
+            );
+            //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
+
+            if call_result.success {
+                helper::push_to_stack(&mut stack, U256::from(1));
+                helper::memory_access(retoffset, retsize, &mut memory_array, &mut stack);
+                //let mut byte_form = [0u8; 32];
+                //call_result.ret.to_big_endian(&mut byte_form);
+
+                println!("the returned value is : {:?}", call_result.ret);
+                let mut index = retoffset;
+                for i in 0..retsize {
+                    memory_array[index] = call_result.ret[i];
+                    index += 1;
+                    //here write to specific bytes as mload will load all the 32 bytes together
+                    //if call the caller in the sub context of the other contract then it will be main contract tx_to and the other contract tx_from
+                }
+            } else {
+                helper::push_to_stack(&mut stack, U256::from(0));
+            }
+        }
+        if opcode == 0xf0 {
+            //NOTE
+            //Should deployment succeed, the new account's code is set to the return data resulting from executing the initialisation code.
+            pc += 1;
+            if staticflag {
+                helper::revert_changes(
+                    storage,
+                    &storage_changed_slot_list,
+                    &storage_changed_initial_value_list,
+                );
+                status = false;
+            } else {
+                let (value, _offset, _size) = helper::pop3(&mut stack);
+                let offset = _offset.low_u64() as usize;
+                println!("yeah the value is offset {offset}");
+                
+                let size = _size.low_u64() as usize;
+                println!("yeah the value is offset {size}");
+                //For Contracts: nonce represents the number of contracts created by that contract.
+                //like storage the nonce is also a contract variable and so is stored in the main.rs
+
+                //let mut nonce_str : Vec<u8> = Vec::new();
+                //nonce.to_big_endian(&mut nonce_str);
+                let mut hasher = Keccak::v256();
+                //let ans = &memory_array[v1..v1 + v2];
+                hasher.update(_tx_to.as_bytes());
+                //hasher.update(&nonce_str[..]);
+                let mut output = [0u8; 32];
+                hasher.finalize(&mut output);
+                let mut result = helper::bytes_to_u256(output.to_vec());
+                result = result >> 12;
+                let address = helper::get_addr(result);
+                //let new_state : HashMap<String,StateAccountData> = HashMap::new();
+                //let mut map_state: HashMap<String, StateAccountData> = match _account_state {
+                //  Some(val) => val.clone(),
+                //None => new_state,
+                //};
+
+                match _account_state.get(&address) {
+                    Some(val) => helper::push_to_stack(&mut stack, U256::from(0)),
+                    None => {
+                        //nonce = nonce + U256::from(0);
+                        let mut corresponding_addr_data: StateAccountData = StateAccountData {
+                            balance: helper::get_addr(value),
+                            code: Statecode {
+                                asm: Some(String::from("")),
+                                bin: hex::encode(&memory_array[offset..offset + size]),
+                            },
+                        };  
+                        println!("the corresponding bin is {:?}",corresponding_addr_data.code.bin);
+                        _account_state.insert(address.clone(), corresponding_addr_data.clone());
+                        let mut other_contract_storage: HashMap<U256, U256> = HashMap::new();
+                        let codeforex: Vec<u8> = hex::decode(&corresponding_addr_data.code.bin).unwrap();
+                        call_result = evm(
+                            &codeforex,
+                            &address,
+                            _tx_to,
+                            _tx_origin,
+                            _tx_gasprice,
+                            &corresponding_addr_data.balance,
+                            &String::from(""),
+                            _block_basefee,
+                            _block_coinbase,
+                            _block_timestamp,
+                            _block_number,
+                            _block_difficulty,
+                            _block_gaslimit,
+                            _block_chainid,
+                            _account_state,
+                            &mut other_contract_storage,
+                            false,
+                            //U256::from(0),
+                        );
+                        if call_result.success {
+                            corresponding_addr_data.code.bin = hex::encode(&call_result.ret);
+                            _account_state.insert(address.clone(), corresponding_addr_data.clone());
+                            println!("hey this was executed and the bin is {:?}",corresponding_addr_data.code.bin);
+                            helper::push_to_stack(
+                                &mut stack,
+                                U256::from_str_radix(&address, 16).unwrap(),
+                            );
+                        }
+                        else {
+                            //corresponding_addr_data = StateAccountData {
+                              //  balance: String::from("0x00"),
+                                //code: Statecode {
+                                  //  asm: Some(String::from("")),
+                                    //bin: String::from(""),
+                                //},
+                            //};
+                            //_account_state.insert(address.clone(), corresponding_addr_data.clone());
+                            _account_state.remove(&address);
+                            helper::push_to_stack(&mut stack, U256::from(0));
+                        }
+                        
+                        //pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_origin : &String, _tx_gasprice  : &String,_tx_value  : &String, _tx_data : &String,_block_basefee : &String, _block_coinbase : &String,_block_timestamp : &String,_block_number : &String,_block_difficulty : &String,_block_gaslimit : &String,_block_chainid : &String, _account_state : &Option<HashMap<String, StateAccountData>>,storage : &mut HashMap<U256,U256>) -> EvmResult
+                    }
+                };
+            }
+        }
+        if opcode == 0xff {
+            //pc = pc + code.len();
+            //helper::push_to_stack(&mut stack, U256::from(0));
+            pc +=1;
+            let _address = stack.remove(0);//transfer account 
+            let address = helper::get_addr(_address);
+            let dead_balance = match _account_state.get(_tx_to){
+                Some(val) => &val.balance.clone(),
+                None => &String::from("0x00"),
+            };
+            println!("fgh this is the dead_balance {dead_balance}");
+            let mut defacc : StateAccountData = StateAccountData {
+                balance: String::from("0x00"),
+                code: Statecode {
+                    asm: Some(String::from("")),
+                    bin: String::from(""),
+                },
+            };
+            println!("the trans acc is {address} and the dead acc is {_tx_to}");
+            println!("hoi the current account state is {:?}", _account_state);
+            let trans_acc: &mut StateAccountData = match _account_state.get_mut(&address){
+                Some(val) => val,
+                None => {
+                    _account_state.insert(address.clone(), defacc.clone());
+                    _account_state.get_mut(&address).unwrap()
+                },
+            };//this will give a mutable refence to the value 
+            let current_trans_balance = &trans_acc.balance;
+            println!("fgh this is the current_trans_balance {current_trans_balance}");
+            let final_balance_u256 = U256::from_str_radix(current_trans_balance, 16).unwrap() + U256::from_str_radix(&dead_balance, 16).unwrap();
+            println!("fgh this is the final_balance {final_balance_u256}");
+            //let final_balance = helper::get_addr(final_balance);
+            trans_acc.balance = helper::get_addr(final_balance_u256);
+
+            //_account_state.insert(address, trans_acc.clone());
+
+            _account_state.remove(_tx_to);
+            status = false;
+        }
 
         //invalid opcode
         if opcode == 0xfe {
@@ -1409,23 +1696,24 @@ pub fn evm(_code: impl AsRef<[u8]>, _tx_to : &String, _tx_from : &String, _tx_or
         }
         if !valid_opcodes.contains(&opcode) {
             status = false;
+            println!("the opcode is {opcode}");
             println!("status switched to false as not a vaid opcode");
             break;
         }
     }
 
     // TODO: Implement me
-    let logs_struct = Log{
+    let logs_struct = Log {
         address: _address,
-        data : _data,
-        topics : logs_stack,
+        data: _data,
+        topics: logs_stack,
     };
     println!("status of success is : {status}");
-    println!("status of return_val is : {:?}",return_val);
+    println!("status of return_val is : {:?}", return_val);
     return EvmResult {
         stack: stack,
         success: status,
         logs: logs_struct,
-        ret : return_val,
+        ret: return_val,
     };
 }

@@ -1,5 +1,6 @@
 use primitive_types::U256;
 use std::any::type_name;
+use std::collections::HashMap;
 
 pub fn index_rem_push(opcode: usize, stack: &mut Vec<U256>, code: &[u8], pc: &mut usize) {
     let ind_rem = opcode - 95 + 1;
@@ -258,23 +259,28 @@ pub fn bytes_to_u256_ref(byte_rep: &Vec<u8>) -> U256 {
     }
     result
 }
-pub fn memory_access(num1 : usize,offset : usize, memory_array : &mut Vec<u8>, stack : &mut Vec<U256>) {
-    //offset is the size of the memory being accessed 
+pub fn memory_access(
+    num1: usize,
+    offset: usize,
+    memory_array: &mut Vec<u8>,
+    stack: &mut Vec<U256>,
+) {
+    //offset is the size of the memory being accessed
     //num1 is the index of the place from where the memory will be accessed
     if num1 > memory_array.len() {
         let intermidate_add_0 = num1 - memory_array.len(); //these are len and index so difference of 1 is adjusted
-         
+
         add0(memory_array, intermidate_add_0);
         let req_0 = ((num1 + offset) / 32 + 1) * 32 - memory_array.len();
         add0(memory_array, req_0);
-        //since it is already a mutable reference so no need to again specify that here 
+        //since it is already a mutable reference so no need to again specify that here
     } else {
         if num1 + offset < memory_array.len() {
         } else {
             let mut req_0 = 0;
             if div_check(U256::from(num1 + offset), U256::from(32)) {
                 req_0 = ((num1 + offset) / 32) * 32 - memory_array.len();
-                //num1+offset is the final byte read as whether to expand memory or not will depend on the last byte read 
+                //num1+offset is the final byte read as whether to expand memory or not will depend on the last byte read
             } else {
                 req_0 = ((num1 + offset) / 32 + 1) * 32 - memory_array.len();
             }
@@ -283,31 +289,43 @@ pub fn memory_access(num1 : usize,offset : usize, memory_array : &mut Vec<u8>, s
         }
     }
 }
-pub fn hex_str_to_u256_push (to : &String, stack : &mut Vec<U256>){
+pub fn hex_str_to_u256_push(to: &String, stack: &mut Vec<U256>) {
     let trimmed_hex = to.trim_start_matches("0x");
-    // Remove the "0x" prefix if it's there for this function 
+    // Remove the "0x" prefix if it's there for this function
     let result = U256::from_str_radix(trimmed_hex, 16).unwrap();
     push_to_stack(stack, result);
 }
-pub fn get_addr(addr : U256) -> String{
-    let mut addr_bytes = [0u8;32];
+pub fn get_addr(addr: U256) -> String {
+    let mut addr_bytes = [0u8; 32];
     addr.to_big_endian(&mut addr_bytes);
     let addr_str = hex::encode(&addr_bytes);
     let trimmed = addr_str.trim_start_matches('0');
-    //u256 -> bytes array -> string 
+    //u256 -> bytes array -> string
     let mut address = String::from("0x");
-    address.push_str(trimmed);//address of the contract 
+    address.push_str(trimmed); //address of the contract
     println!("{address}");
     address
 }
-pub fn bytes_to_str(bytes : Vec<u8>) -> String{
+pub fn bytes_to_str(bytes: Vec<u8>) -> String {
     let mut data_string = String::new();
     //for i in 0..bytes.len(){
-      //  let val = bytes[i];
-        //data_string = format!("{}{}",data_string,val);
-        //println!("{data_string}");
+    //  let val = bytes[i];
+    //data_string = format!("{}{}",data_string,val);
+    //println!("{data_string}");
     //}
     data_string = hex::encode(bytes);
     println!("data string is {data_string}");
     data_string
+}
+pub fn revert_changes(
+    storage: &mut HashMap<U256, U256>,
+    storageSlotList: &Vec<U256>,
+    storageSlotvalueList: &Vec<U256>,
+) {
+    let mut index = 0;
+    //reverting the state changes
+    for i in storageSlotList {
+        storage.insert(*i, storageSlotvalueList[index]);
+        index += 1;
+    }
 }
